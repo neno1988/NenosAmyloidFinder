@@ -1,0 +1,72 @@
+~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~
+
+low complexity regions: SEG 12 2.2 2.5
+>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
+
+                                  1-375  MSRLERLTSLNVVAGSDLRRTSIIGTIGPK
+                                         TNNPETLVALRKAGLNIVRMNFSHGSYEYH
+                                         KSVIDNARKSEELYPGRPLAIALDTKGPEI
+                                         RTGTTTNDVDYPIPPNHEMIFTTDDKYAKA
+                                         CDDKIMYVDYKNITKVISAGRIIYVDDGVL
+                                         SFQVLEVVDDKTLKVKALNAGKICSHKGVN
+                                         LPGTDVDLPALSEKDKEDLRFGVKNGVHMV
+                                         FASFIRTANDVLTIREVLGEQGKDVKIIVK
+                                         IENQQGVNNFDEILKVTDGVMVARGDLGIE
+                                         IPAPEVLAVQKKLIAKSNLAGKPVICATQM
+                                         LESMTYNPRPTRAEVSDVGNAILDGADCVM
+                                         LSGETAKGNYPINAVTTMAETAVIAEQAIA
+                                         YLPNYDDMRNCTPKP
+               tsttetvaasavaav  376-390  
+                                391-500  FEQKAKAIIVLSTSGTTPRLVSKYRPNCPI
+                                         ILVTRCPRAARFSHLYRGVFPFVFEKEPVS
+                                         DWTDDVEARINFGIEKAKEFGILKKGDTYV
+                                         SIQGFKAGAGHSNTLQVSTV
+
+
+low complexity regions: SEG 25 3.0 3.3
+>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
+
+                                  1-375  MSRLERLTSLNVVAGSDLRRTSIIGTIGPK
+                                         TNNPETLVALRKAGLNIVRMNFSHGSYEYH
+                                         KSVIDNARKSEELYPGRPLAIALDTKGPEI
+                                         RTGTTTNDVDYPIPPNHEMIFTTDDKYAKA
+                                         CDDKIMYVDYKNITKVISAGRIIYVDDGVL
+                                         SFQVLEVVDDKTLKVKALNAGKICSHKGVN
+                                         LPGTDVDLPALSEKDKEDLRFGVKNGVHMV
+                                         FASFIRTANDVLTIREVLGEQGKDVKIIVK
+                                         IENQQGVNNFDEILKVTDGVMVARGDLGIE
+                                         IPAPEVLAVQKKLIAKSNLAGKPVICATQM
+                                         LESMTYNPRPTRAEVSDVGNAILDGADCVM
+                                         LSGETAKGNYPINAVTTMAETAVIAEQAIA
+                                         YLPNYDDMRNCTPKP
+tsttetvaasavaavfeqkakaiivlstsg  376-407  
+                            tt
+                                408-500  PRLVSKYRPNCPIILVTRCPRAARFSHLYR
+                                         GVFPFVFEKEPVSDWTDDVEARINFGIEKA
+                                         KEFGILKKGDTYVSIQGFKAGAGHSNTLQV
+                                         STV
+
+
+low complexity regions: SEG 45 3.4 3.75
+>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
+
+                                  1-500  MSRLERLTSLNVVAGSDLRRTSIIGTIGPK
+                                         TNNPETLVALRKAGLNIVRMNFSHGSYEYH
+                                         KSVIDNARKSEELYPGRPLAIALDTKGPEI
+                                         RTGTTTNDVDYPIPPNHEMIFTTDDKYAKA
+                                         CDDKIMYVDYKNITKVISAGRIIYVDDGVL
+                                         SFQVLEVVDDKTLKVKALNAGKICSHKGVN
+                                         LPGTDVDLPALSEKDKEDLRFGVKNGVHMV
+                                         FASFIRTANDVLTIREVLGEQGKDVKIIVK
+                                         IENQQGVNNFDEILKVTDGVMVARGDLGIE
+                                         IPAPEVLAVQKKLIAKSNLAGKPVICATQM
+                                         LESMTYNPRPTRAEVSDVGNAILDGADCVM
+                                         LSGETAKGNYPINAVTTMAETAVIAEQAIA
+                                         YLPNYDDMRNCTPKPTSTTETVAASAVAAV
+                                         FEQKAKAIIVLSTSGTTPRLVSKYRPNCPI
+                                         ILVTRCPRAARFSHLYRGVFPFVFEKEPVS
+                                         DWTDDVEARINFGIEKAKEFGILKKGDTYV
+                                         SIQGFKAGAGHSNTLQVSTV
+
+
+~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~ ~~~~~
