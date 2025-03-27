@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
 import json
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -37,60 +39,81 @@ def main():
     fasta_sequence = Grasp65
     seg_data = ng.get_SEG_data(fasta_sequence, seg=25)
     zipperDE_data = ng.get_zipperDB_data(fasta_sequence)
+    amylpred_data = ng.get_Amylpred_data(fasta_sequence.seq)
 
     #fig1, _ = ng.nice_heatmap_plot(seg_data)
     #fig1.show()
+        # Create interactive plot
+    fig = ng.visualization.create_interactive_heatmaps(
+        lcr_data=seg_data.reshape(1, -1),
+        zipperdb_data=zipperDE_data,
+        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
+        threshold=-23,
+        name="name",
+        xticks=50
+    )
+    fig.show()
 
-
-    #fig2, _ = ng.nice_heatmap_plot(zipperDE_data)
-    #fig2.show()
-    output_folder = r"\Output"
-    threshold = -23
-    fig3 = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold = threshold)
-    
-    # Save the figure as a JPEG file
-    fig3.savefig(fasta_sequence.name+'_treshold_'+str(threshold)+'.jpg', format='jpeg', dpi=300)
-    file_name = fasta_sequence.name+'_treshold_'+str(threshold)+'.jpg'
-    fig3.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-
-    threshold = -24.5
-    fig4 = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold = threshold)
-    file_name = fasta_sequence.name+'_treshold_'+str(threshold)+'.jpg'
-    fig4.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-
-    fig3.show()
-    fig4.show()
-    input()
-    print("Ho4")
 
 @filecache.filecache(24*60*60)
 def slow_function(x, y):
     time.sleep(30)
     return x + y
 def analyse_protein(output_folder, seq, description, name, threshold, SEG, xticks):
-
     fasta_protein = ng.utils.FastaSeq()
     fasta_protein.description = description
     fasta_protein.seq = seq
     fasta_protein.name = name
 
+    # Get SEG and ZipperDB data
     seg_data = ng.get_SEG_data(fasta_protein, seg=SEG)
     zipperDE_data = ng.get_zipperDB_data(fasta_protein)
+
+    # Get Amylpred data if credentials are provided
+    try:
+        amylpred_data = ng.get_Amylpred_data(fasta_protein.seq)
+    except Exception as e:
+        messagebox.showwarning("Warning", f"Failed to get Amylpred data: {str(e)}")
+        amylpred_data = None
 
     if SEG==0:
         # TODO: only return fig  in nice_heatmap_plot?
         white_cmap = ["white", "white"]
-        fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks = xticks)
-
+        fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
     else:
         fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, xticks=xticks)
+    
+    
+    # Create interactive plot
+    fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
+        lcr_data=seg_data.reshape(1, -1),
+        zipperdb_data=zipperDE_data,
+        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
+        threshold=threshold,
+        name=name,
+        xticks=xticks
+    )
 
-     
+    # Save the figure as HTML
+    html_file = os.path.join(output_folder, f"{name}_analysis.html")
+    fig.write_html(html_file)
+
     # Save the figure as a JPEG file
     fig.savefig(fasta_protein.name+'_treshold_'+str(threshold)+'.jpg', format='jpeg', dpi=300)
     file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
     fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
     fig.show()
+
+    # If Amylpred data is available, show it
+    if amylpred_data is not None:
+        plt.figure(figsize=(10, 2))
+        plt.imshow(amylpred_data, cmap='viridis', aspect='auto')
+        plt.colorbar(label='Amylpred Score')
+        plt.yticks([])
+        plt.xticks(ticks=np.arange(len(seq)), fontsize=8)
+        plt.xlabel('Amino Acid Position')
+        plt.title(f'Amylpred Analysis - {name}')
+        plt.show()
 
 ### ------------------------------- DATA VALIDATION STUFF ---------------------
 import re
@@ -216,20 +239,38 @@ threshold_entry = ttk.Entry(parameters_frame, width=20)
 threshold_entry.grid(row=1, column=1, sticky="w")
 threshold_entry.insert(0, config.get("threshold", ""))
 
+# Amylpred Credentials Frame
+amylpred_frame = ttk.LabelFrame(parameters_frame, text="Amylpred Credentials")
+amylpred_frame.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+
+# Amylpred Username
+amylpred_username_label = ttk.Label(amylpred_frame, text="Username:")
+amylpred_username_label.grid(row=0, column=0, sticky="w")
+amylpred_username_entry = ttk.Entry(amylpred_frame, width=20)
+amylpred_username_entry.grid(row=0, column=1, sticky="w")
+amylpred_username_entry.insert(0, config.get("amylpred_username", ""))
+
+# Amylpred Password
+amylpred_password_label = ttk.Label(amylpred_frame, text="Password:")
+amylpred_password_label.grid(row=1, column=0, sticky="w")
+amylpred_password_entry = ttk.Entry(amylpred_frame, width=20, show="*")
+amylpred_password_entry.grid(row=1, column=1, sticky="w")
+amylpred_password_entry.insert(0, config.get("amylpred_password", ""))
+
 # Output Folder field
 output_label = ttk.Label(parameters_frame, text="Output Folder:")
-output_label.grid(row=2, column=0, sticky="w")
+output_label.grid(row=3, column=0, sticky="w")
 output_entry = ttk.Entry(parameters_frame, width=40)
-output_entry.grid(row=2, column=1, sticky="w")
+output_entry.grid(row=3, column=1, sticky="w")
 output_entry.insert(0, config.get("output_folder", ""))
 output_button = ttk.Button(parameters_frame, text="Browse", command=lambda: browse_output())
-output_button.grid(row=2, column=2, sticky="e")
+output_button.grid(row=3, column=2, sticky="e")
 
 # Add X ticks parameter
-xticks_label = ttk.Label(parameters_frame, text="X ticks (0=auto):").grid(row=3, column=0, padx=5, pady=5, sticky="w")
+xticks_label = ttk.Label(parameters_frame, text="X ticks (0=auto):").grid(row=4, column=0, padx=5, pady=5, sticky="w")
 xticks_var = tk.IntVar(value=0)
 xticks_entry = ttk.Entry(parameters_frame, textvariable=xticks_var)
-xticks_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+xticks_entry.grid(row=4, column=1, padx=5, pady=5, sticky="ew")
 
 # Run Analysis and Exit Buttons
 run_button = ttk.Button(root, text="Run Analysis", command=lambda: run_analysis())
@@ -257,23 +298,27 @@ def import_fasta():
             sequence_text.insert("1.0", sequence)
 
 def run_analysis():
-    #try:
-    threshold = validate_threshold(threshold_entry.get())
-    sequence = validate_sequence(sequence_text.get("1.0", tk.END).strip())
-    xticks = validate_xticks(xticks_entry.get())
+    try:
+        threshold = validate_threshold(threshold_entry.get())
+        sequence = validate_sequence(sequence_text.get("1.0", tk.END).strip())
+        xticks = validate_xticks(xticks_entry.get())
+        
+        # Set Amylpred credentials in the environment
+        os.environ['AMYLPRED_USERNAME'] = amylpred_username_entry.get()
+        os.environ['AMYLPRED_PASSWORD'] = amylpred_password_entry.get()
    
-    analyse_protein(
-        output_folder=output_entry.get(),
-        seq=sequence,
-        description=description_entry.get(),
-        name=name_entry.get(),
-        threshold=threshold,
-        SEG=int(seg_dropdown.get()), 
-        xticks = xticks
-    )
-    messagebox.showinfo("Success", "Analysis complete!")
-    #except Exception as e:
-    #    messagebox.showerror("Error", f"Failed to run analysis: {e}")
+        analyse_protein(
+            output_folder=output_entry.get(),
+            seq=sequence,
+            description=description_entry.get(),
+            name=name_entry.get(),
+            threshold=threshold,
+            SEG=int(seg_dropdown.get()), 
+            xticks=xticks
+        )
+        messagebox.showinfo("Success", "Analysis complete!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to run analysis: {e}")
 
 def exit_app():
     save_config({
@@ -283,7 +328,9 @@ def exit_app():
         "SEG": seg_dropdown.get(),
         "threshold": threshold_entry.get(),
         "output_folder": output_entry.get(),
-        "xticks": xticks_entry.get()
+        "xticks": xticks_entry.get(),
+        "amylpred_username": amylpred_username_entry.get(),
+        "amylpred_password": amylpred_password_entry.get()
     })
     root.destroy()
 
@@ -291,6 +338,6 @@ def exit_app():
 
 if __name__ == "__main__":
     # Run the application (GUI)
-    root.mainloop()
+    #root.mainloop()
 
-    #main() # debugging
+    main() # debugging
