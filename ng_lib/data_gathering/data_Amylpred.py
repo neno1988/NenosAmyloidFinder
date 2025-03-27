@@ -22,10 +22,17 @@ SIQGFKAGAGHSNTLQVSTV"""
 AMYLPRED_DEBUG = True
 
 
-def fetch_amylpred_results(fasta_sequence, username, password):
+def fetch_amylpred_results(fasta_sequence):
     url = "http://thalis.biol.uoa.gr/AMYLPRED2/input.php"
     driver = webdriver.Chrome()
     driver.get(url)
+
+    # Get credentials from environment variables
+    username = os.environ.get('AMYLPRED_USERNAME')
+    password = os.environ.get('AMYLPRED_PASSWORD')
+
+    if not username or not password:
+        raise ValueError("Amylpred credentials not found. Please provide username and password in the GUI.")
 
     textarea = driver.find_element(By.NAME, "email")
     textarea.send_keys(username)
@@ -134,7 +141,7 @@ def get_Amylpred_data(protein_fasta, plot_it = False):
     scores = consensus_vec.reshape(1, -1)
 
 
-    plot_it = True
+    plot_it = False
     if plot_it:
         # Plotting the results as a heatmap
         plt.figure(figsize=(10, 2))
