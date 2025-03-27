@@ -22,16 +22,16 @@ SIQGFKAGAGHSNTLQVSTV"""
 AMYLPRED_DEBUG = True
 
 
-def fetch_amylpred_results(fasta_sequence):
+def fetch_amylpred_results(fasta_sequence, username, password):
     url = "http://thalis.biol.uoa.gr/AMYLPRED2/input.php"
     driver = webdriver.Chrome()
     driver.get(url)
 
     textarea = driver.find_element(By.NAME, "email")
-    textarea.send_keys(USERNAME)
+    textarea.send_keys(username)
     
     textarea = driver.find_element(By.NAME, "password")
-    textarea.send_keys(PASSWORD)
+    textarea.send_keys(password)
     
     # Find the textarea and input the sequence
     login_button = driver.find_element(By.XPATH, '//input[@type="submit" and @value="Login"]')
