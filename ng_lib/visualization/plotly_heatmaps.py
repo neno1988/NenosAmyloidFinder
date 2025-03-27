@@ -50,22 +50,32 @@ def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshol
                 [0.4, 'lightgray'],# None
                 [0.6, 'blue'],     # Only Amylpred
                 [0.8, 'yellow'],   # Only ZipperDB
-                [1, 'green'],    # Both
-                [1, 'green']
+                [1, 'green']       # Both
             ],
-            showscale=True,
-            colorbar=dict(
-                title='Score',
-                len=0.3,
-                y=0.5,
-                ticktext=['No LCR', 'LCR', 'None', 'Only Amylpred', 'Only ZipperDB', 'Both'],
-                tickvals=[0.05, 0.15, 0.3, 0.5, 0.7, 0.9],
-                tickmode='array'
-            ),
+            showscale=False,  # Hide the default colorbar
             hoverongaps=False,
             name='Combined'
         )
     )
+
+    # Add legend as annotations
+    legend_texts = ['No LCR', 'LCR', 'None', 'Only Amylpred', 'Only ZipperDB', 'Both']
+    legend_colors = ['white', 'darkgray', 'lightgray', 'blue', 'yellow', 'green']
+    
+    # Calculate total width needed for legend
+    legend_width = len(legend_texts) * 0.15  # Approximate width per item
+    start_x = 0.5 - legend_width/2  # Center the legend
+    
+    for i, (text, color) in enumerate(zip(legend_texts, legend_colors)):
+        fig.add_annotation(
+            x=start_x + i*0.15,
+            y=1.1,  # Position above the plot
+            xref='paper',
+            yref='paper',
+            text=f'<span style="color: {color}">■</span> {text}',
+            showarrow=False,
+            font=dict(size=12)
+        )
 
     # Update layout
     fig.update_layout(
@@ -73,7 +83,7 @@ def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshol
         showlegend=False,
         title_text=f"Protein Analysis - {name}",
         title_x=0.5,
-        margin=dict(t=50, b=50),
+        margin=dict(t=100, b=50),  # Increased top margin for legend
         yaxis=dict(
             showticklabels=False,
             fixedrange=True
