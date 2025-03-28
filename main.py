@@ -39,7 +39,7 @@ def main():
     fasta_sequence = Grasp65
     seg_data = ng.get_SEG_data(fasta_sequence, seg=25)
     zipperDE_data = ng.get_zipperDB_data(fasta_sequence)
-    amylpred_data = ng.get_Amylpred_data(fasta_sequence.seq)
+    amylpred_data = ng.get_amylpred_data(fasta_sequence.seq)
 
     #fig1, _ = ng.nice_heatmap_plot(seg_data)
     #fig1.show()
@@ -59,6 +59,7 @@ def main():
 def slow_function(x, y):
     time.sleep(30)
     return x + y
+
 def analyse_protein(output_folder, seq, description, name, threshold, SEG, xticks):
     fasta_protein = ng.utils.FastaSeq()
     fasta_protein.description = description
@@ -71,18 +72,28 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
 
     # Get Amylpred data if credentials are provided
     try:
-        amylpred_data = ng.get_Amylpred_data(fasta_protein.seq)
+        amylpred_data = ng.get_amylpred_data(fasta_protein.seq)
     except Exception as e:
         messagebox.showwarning("Warning", f"Failed to get Amylpred data: {str(e)}")
         amylpred_data = None
 
-    if SEG==0:
-        # TODO: only return fig  in nice_heatmap_plot?
-        white_cmap = ["white", "white"]
-        fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
-    else:
-        fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, xticks=xticks)
-    
+    do_matplotlib_plots = False
+    if do_matplotlib_plots:
+        if SEG==0:
+            # TODO: only return fig  in nice_heatmap_plot?
+            white_cmap = ["white", "white"]
+            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
+            # Save the figure as a JPEG file
+            file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
+            fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
+            fig.show() 
+
+        else:
+            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, xticks=xticks)
+            # Save the figure as a JPEG file
+            file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
+            fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
+            fig.show() 
     
     # Create interactive plot
     fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
@@ -93,19 +104,17 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
         name=name,
         xticks=xticks
     )
+    fig.show()
 
     # Save the figure as HTML
     html_file = os.path.join(output_folder, f"{name}_analysis.html")
     fig.write_html(html_file)
 
-    # Save the figure as a JPEG file
-    fig.savefig(fasta_protein.name+'_treshold_'+str(threshold)+'.jpg', format='jpeg', dpi=300)
-    file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
-    fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-    fig.show()
+
 
     # If Amylpred data is available, show it
-    if amylpred_data is not None:
+    plot_amylpred_only = False
+    if plot_amylpred_only and amylpred_data is not None:
         plt.figure(figsize=(10, 2))
         plt.imshow(amylpred_data, cmap='viridis', aspect='auto')
         plt.colorbar(label='Amylpred Score')
@@ -158,7 +167,7 @@ def load_config():
     return {}
 
 # Function to parse FASTA file
-def parse_fasta(file_path):
+def parse_fasta_from_file(file_path):
     try:
         with open(file_path, 'r') as f:
             lines = f.readlines()
@@ -169,6 +178,17 @@ def parse_fasta(file_path):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to parse FASTA file: {e}")
         return None, None, None
+    
+def parse_fasta(fasta_str):
+    lines = fasta_str.split("\n")
+    description = lines[0].strip()
+    sequence = ''.join(line.strip() for line in lines[1:])
+    name = description.split(' ')[0][1:]  # Extract ID from description
+    ret = ng.utils.FastaSeq()
+    ret.name = name
+    ret.seq = sequence
+    ret.description = description
+    return ret
 
 # Function to be called on "Run analysis"
 def call_me(output_folder, seq, description, name, threshold, SEG):
@@ -288,7 +308,7 @@ def browse_output():
 def import_fasta():
     file_path = filedialog.askopenfilename(filetypes=[("FASTA files", "*.fasta;*.fa")])
     if file_path:
-        name, description, sequence = parse_fasta(file_path)
+        name, description, sequence = parse_fasta_from_file(file_path)
         if name and description and sequence:
             name_entry.delete(0, tk.END)
             name_entry.insert(0, name)
@@ -299,23 +319,49 @@ def import_fasta():
 
 def run_analysis():
     try:
+
         threshold = validate_threshold(threshold_entry.get())
-        sequence = validate_sequence(sequence_text.get("1.0", tk.END).strip())
-        xticks = validate_xticks(xticks_entry.get())
         
-        # Set Amylpred credentials in the environment
-        os.environ['AMYLPRED_USERNAME'] = amylpred_username_entry.get()
-        os.environ['AMYLPRED_PASSWORD'] = amylpred_password_entry.get()
-   
-        analyse_protein(
-            output_folder=output_entry.get(),
-            seq=sequence,
-            description=description_entry.get(),
-            name=name_entry.get(),
-            threshold=threshold,
-            SEG=int(seg_dropdown.get()), 
-            xticks=xticks
-        )
+        sequence_txt_stripped = sequence_text.get("1.0", tk.END).strip()
+        if sequence_txt_stripped.count('>')==1:
+            # if is fasta format (TODO: use some better function in biotools to detect fasta?)
+            fasta_seq = parse_fasta(sequence_txt_stripped)
+            sequence = fasta_seq.seq
+            sequences = [sequence]
+            names = [name_entry.get()]
+        elif sequence_txt_stripped.count('>')==0:
+            # only sequence
+            sequence = sequence_txt_stripped.replace("\n", "").replace(" ", "")
+            sequences = [sequence]
+            names = [name_entry.get()]
+        elif sequence_txt_stripped.count('>') > 1:
+            fastas = sequence_txt_stripped.split('>')
+            sequences = []
+            names = []
+            for f in fastas:
+                fasta_object = parse_fasta(f)
+                if len(fasta_object.seq) >2:
+                    sequences.append(fasta_object.seq)
+                    names.append(fasta_object.name)
+
+        for sequence, name in zip(sequences, names):
+            sequence = validate_sequence(sequence)
+
+            xticks = validate_xticks(xticks_entry.get())
+            
+            # Set Amylpred credentials in the environment
+            os.environ['AMYLPRED_USERNAME'] = amylpred_username_entry.get()
+            os.environ['AMYLPRED_PASSWORD'] = amylpred_password_entry.get()
+    
+            analyse_protein(
+                output_folder=output_entry.get(),
+                seq=sequence,
+                description=description_entry.get(),
+                name=name,
+                threshold=threshold,
+                SEG=int(seg_dropdown.get()), 
+                xticks=xticks
+            )
         messagebox.showinfo("Success", "Analysis complete!")
     except Exception as e:
         messagebox.showerror("Error", f"Failed to run analysis: {e}")
@@ -335,9 +381,11 @@ def exit_app():
     root.destroy()
 
 
+def test_multi_fasta():
+    pass
 
 if __name__ == "__main__":
     # Run the application (GUI)
-    #root.mainloop()
+    root.mainloop()
 
-    main() # debugging
+    #main() # debugging

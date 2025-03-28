@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import os
 import re
+import filecache
 # Define the CDC19 protein sequence in FASTA format
 protein_fasta_full = """>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
 MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH
@@ -19,17 +20,18 @@ YLPNYDDMRNCTPKPTSTTETVAASAVAAVFEQKAKAIIVLSTSGTTPRLVSKYRPNCPI
 ILVTRCPRAARFSHLYRGVFPFVFEKEPVSDWTDDVEARINFGIEKAKEFGILKKGDTYV
 SIQGFKAGAGHSNTLQVSTV"""
 
-AMYLPRED_DEBUG = True
+AMYLPRED_DEBUG = False
 
 
+@filecache.filecache(24*60*60)
 def fetch_amylpred_results(fasta_sequence):
     url = "http://thalis.biol.uoa.gr/AMYLPRED2/input.php"
     driver = webdriver.Chrome()
     driver.get(url)
 
     # Get credentials from environment variables
-    username = os.environ.get('AMYLPRED_USERNAME')
-    password = os.environ.get('AMYLPRED_PASSWORD')
+    username = os.environ.get('AMYLPRED_USERNAME') # TODO: get from GUI is not available in environment
+    password = os.environ.get('AMYLPRED_PASSWORD') # TODO: get from GUI is not available in environment
 
     if not username or not password:
         raise ValueError("Amylpred credentials not found. Please provide username and password in the GUI.")
@@ -40,26 +42,34 @@ def fetch_amylpred_results(fasta_sequence):
     textarea = driver.find_element(By.NAME, "password")
     textarea.send_keys(password)
     
-    # Find the textarea and input the sequence
-    login_button = driver.find_element(By.XPATH, '//input[@type="submit" and @value="Login"]')
-    login_button.click()
+    # is it a batch sequence?
+    if fasta_sequence.count('>')>1:
+        print("Batch mode! Not ready!")
+        raise(ValueError("Batch mode not available for Amylpred"))
 
-    textarea = driver.find_element(By.NAME, "seq_data")
-    textarea.send_keys(fasta_sequence)
-    
-    submit_button = driver.find_element(By.XPATH, '//input[@class="normalc" and @value="Submit Query" and @type="submit"]')
-    submit_button.click()
+    else:
+        # Find the textarea and input the sequence
+        login_button = driver.find_element(By.XPATH, '//input[@type="submit" and @value="Login"]')
+        login_button.click()
 
-    driver.implicitly_wait(120)    
-    link = driver.find_element(By.XPATH, '//a[contains(@href, "/AMYLPRED2/tmp/") and contains(@href, ".txt")]')
-    link.click()
+        textarea = driver.find_element(By.NAME, "seq_data")
+        textarea.send_keys(fasta_sequence)
+        
+        submit_button = driver.find_element(By.XPATH, '//input[@class="normalc" and @value="Submit Query" and @type="submit"]')
+        submit_button.click()
 
-    # Extract the URL from the href attribute
-    results_url = link.get_attribute('href')
+        driver.implicitly_wait(120)    
+        link = driver.find_element(By.XPATH, '//a[contains(@href, "/AMYLPRED2/tmp/") and contains(@href, ".txt")]')
+        link.click()
 
-    driver.quit()
-    
+        # Extract the URL from the href attribute
+        results_url = link.get_attribute('href')
+
+        driver.quit()
+        
     return results_url
+
+
 
 def download_results_file(url):
     # TODO: just return response.content
@@ -113,7 +123,7 @@ def get_consensus_vec(consensus_dict, protein_length):
             consensus_vec[range_start:range_end] +=1
     return consensus_vec
 
-def get_Amylpred_data(protein_fasta, plot_it = False):
+def get_amylpred_data(protein_fasta, plot_it = False):
 
     if AMYLPRED_DEBUG:
         print("data_Amylpred: DEBUG MODE: using CDC19 data")
@@ -169,5 +179,28 @@ def gather_cdc19_data():
     
 
 
+
+def test_single_fasta():
+    prepare_environment()
+    fetch_amylpred_results(protein_fasta_full)
+
+def test_multi_fasta():
+    prepare_environment()
+    fetch_amylpred_results(protein_fasta_full + "\n\n" + protein_fasta_full)
+
+def load_user_and_pass():
+    import json
+    SECRET_FILE = "secret.json"
+    if os.path.exists(SECRET_FILE):
+        with open(SECRET_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+def prepare_environment():
+        user_pass_dict = load_user_and_pass()
+            # Set Amylpred credentials in the environment
+        os.environ['AMYLPRED_USERNAME'] = user_pass_dict["amylpred_username"]
+        os.environ['AMYLPRED_PASSWORD'] = user_pass_dict["amylpred_password"]
+
 if __name__ == "__main__":
-    get_Amylpred_data(protein_fasta_full)
+    # get_amylpred_data(protein_fasta_full)
+    test_single_fasta()

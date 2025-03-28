@@ -43,9 +43,10 @@ def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshol
 
     for i in range(1, 11):
         combined_matrix[i] = np.where(zipperdb_mask & amylpred_mask, 5, np.where(zipperdb_mask, 4, np.where(amylpred_mask, 3, 2)))
-
     fig = go.Figure(data=go.Heatmap(
         z=combined_matrix,
+        zmin=0,
+        zmax=5,
         colorscale=[
             [0, 'white'],       # No LCR
             [0.2, 'darkgray'],  # LCR
