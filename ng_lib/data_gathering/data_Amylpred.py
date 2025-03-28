@@ -23,7 +23,7 @@ SIQGFKAGAGHSNTLQVSTV"""
 AMYLPRED_DEBUG = False
 
 
-@filecache.filecache(24*60*60)
+@filecache.filecache(7*24*60*60)
 def fetch_amylpred_results(fasta_sequence):
     url = "http://thalis.biol.uoa.gr/AMYLPRED2/input.php"
     driver = webdriver.Chrome()

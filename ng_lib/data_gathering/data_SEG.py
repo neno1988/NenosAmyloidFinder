@@ -11,7 +11,7 @@ import filecache
 
 SEG_DEBUG = False
 
-@filecache.filecache(24*60*60)
+@filecache.filecache(7*24*60*60)
 def fetch_seg_results(fasta_sequence):
     if SEG_DEBUG:
         print("data_SEG: DEBUG MODE: using CDC19 data")
