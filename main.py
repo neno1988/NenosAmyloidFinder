@@ -108,8 +108,15 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
 
     # Save the figure as HTML
     html_file = os.path.join(output_folder, f"{name}_analysis.html")
+    png_file = os.path.join(output_folder, f"{name}_image.png")
     fig.write_html(html_file)
+    
 
+    fig.data= [fig.data[0]]
+    fig.update_layout(title_text=None)
+
+
+    fig.write_image(png_file, engine='kaleido', width = 900, height = 180)
 
 
     # If Amylpred data is available, show it
@@ -183,7 +190,7 @@ def parse_fasta(fasta_str):
     lines = fasta_str.split("\n")
     description = lines[0].strip()
     sequence = ''.join(line.strip() for line in lines[1:])
-    name = description.split(' ')[0][1:]  # Extract ID from description
+    name = description.split(' ')[0][0:]  # Extract ID from description
     ret = ng.utils.FastaSeq()
     ret.name = name
     ret.seq = sequence
@@ -383,6 +390,7 @@ def exit_app():
 
 def test_multi_fasta():
     pass
+
 
 if __name__ == "__main__":
     # Run the application (GUI)
