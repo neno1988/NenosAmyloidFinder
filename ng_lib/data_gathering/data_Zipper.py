@@ -22,7 +22,6 @@ SIQGFKAGAGHSNTLQVSTV"""
 
 ZIPPERDB_DEBUG = False
 
-@filecache.filecache(7*24*60*60)
 def fetch_single_zipperdb_result(fasta_sequence):
     url = "https://zipperdb.mbi.ucla.edu"
     driver = webdriver.Chrome()
@@ -65,7 +64,6 @@ def fetch_single_zipperdb_result(fasta_sequence):
     return df["Score"].reshape(1,-1)
     
     
-
 
 def fetch_zipperdb_results(fasta_sequence):
     url = "https://zipperdb.mbi.ucla.edu/batch"
