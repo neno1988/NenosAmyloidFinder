@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import os
 import re
 import filecache
@@ -25,8 +26,13 @@ AMYLPRED_DEBUG = False
 
 @filecache.filecache(7*24*60*60)
 def fetch_amylpred_results(fasta_sequence):
+    options = Options()
+    #options.add_argument("--headless")  # Run Chrome in headless mode
+    options.add_argument("--disable-gpu")  # Optional: avoid GPU-related issues on Windows
+    options.add_argument("--window-size=1920,1080")  # Optional: simulate full screen for page rendering
+    driver = webdriver.Chrome(options = options)
+
     url = "http://thalis.biol.uoa.gr/AMYLPRED2/input.php"
-    driver = webdriver.Chrome()
     driver.get(url)
 
     # Get credentials from environment variables
@@ -55,6 +61,16 @@ def fetch_amylpred_results(fasta_sequence):
         textarea = driver.find_element(By.NAME, "seq_data")
         textarea.send_keys(fasta_sequence)
         
+        #uncheck AMYLPATTERN and 
+        # Find the checkbox by name, value, or another attribute
+        checkbox_aggrescan = driver.find_element(By.XPATH, "//input[@type='checkbox' and @name='method' and @value='AGGRESCAN']")
+        checkbox_amylmuts = driver.find_element(By.XPATH, "//input[@type='checkbox' and @name='method' and @value='AMYLMUTS']")
+        # Check if it is selected
+        if checkbox_aggrescan.is_selected():
+            checkbox_aggrescan.click()  # uncheck the box
+        if checkbox_amylmuts.is_selected():
+            checkbox_amylmuts.click()  # uncheck the box
+
         submit_button = driver.find_element(By.XPATH, '//input[@class="normalc" and @value="Submit Query" and @type="submit"]')
         submit_button.click()
 
@@ -115,7 +131,7 @@ def get_consensus_vec(consensus_dict, protein_length):
     cons = "CONSENSUS"
     consensus_dict_out = dict()
     consensus_vec = np.zeros(protein_length)
-    for i in range(2,10):
+    for i in range(2,8):
         for r in consensus_dict[cons+str(i)]:
             r_doubles = r.split('-')
             range_start = int(r_doubles[0])

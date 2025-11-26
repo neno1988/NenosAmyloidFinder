@@ -8,6 +8,8 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+import re
 
 
 
@@ -61,7 +63,7 @@ def slow_function(x, y):
     return x + y
 
 def analyse_protein(output_folder, seq, description, name, threshold, SEG, xticks):
-    fasta_protein = ng.utils.FastaSeq()
+    fasta_protein = ng.utils.FastaSeq() # TODO: use official fasta struct here
     fasta_protein.description = description
     fasta_protein.seq = seq
     fasta_protein.name = name
@@ -104,11 +106,20 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
         name=name,
         xticks=xticks
     )
-    fig.show()
+    #fig.show()
 
     # Save the figure as HTML
+    name = re.sub(r'[^\w_. -]', '_', name)
+    #output_folder = os.path.dirname(output_folder)
     html_file = os.path.join(output_folder, f"{name}_analysis.html")
+    html_file = os.path.normpath(html_file)
+    
+    # Delete next line TODO FIXME
+    #html_file = r'C:/Users/Neno/Desktop/NenoGeaProject/Output/November26/CDC19_analysis.html'
+
     png_file = os.path.join(output_folder, f"{name}_image.png")
+    json_file = os.path.join(output_folder, f"{name}_data.json")
+    
     fig.write_html(html_file)
     
 
@@ -119,6 +130,20 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     fig.write_image(png_file, engine='kaleido', width = 900, height = 180)
 
 
+    # Generate output data file
+    data_file = dict()
+    data_file["fasta_seq"] = fasta_protein.seq
+    data_file["fasta_description"] = fasta_protein.description
+    data_file["fasta_name"] = fasta_protein.name
+    data_file["ZipperDB"] = zipperDE_data.tolist()
+    data_file["Amylpred"] = amylpred_data.tolist()
+    data_file["SEG"] = seg_data.tolist()
+
+
+    # Save the JSON
+    with open(json_file, 'w') as f:
+        json.dump(data_file, f, indent = 4)
+    
     # If Amylpred data is available, show it
     plot_amylpred_only = False
     if plot_amylpred_only and amylpred_data is not None:
@@ -325,53 +350,53 @@ def import_fasta():
             sequence_text.insert("1.0", sequence)
 
 def run_analysis():
-    try:
+    #try:
 
-        threshold = validate_threshold(threshold_entry.get())
-        
-        sequence_txt_stripped = sequence_text.get("1.0", tk.END).strip()
-        if sequence_txt_stripped.count('>')==1:
-            # if is fasta format (TODO: use some better function in biotools to detect fasta?)
-            fasta_seq = parse_fasta(sequence_txt_stripped)
-            sequence = fasta_seq.seq
-            sequences = [sequence]
-            names = [name_entry.get()]
-        elif sequence_txt_stripped.count('>')==0:
-            # only sequence
-            sequence = sequence_txt_stripped.replace("\n", "").replace(" ", "")
-            sequences = [sequence]
-            names = [name_entry.get()]
-        elif sequence_txt_stripped.count('>') > 1:
-            fastas = sequence_txt_stripped.split('>')
-            sequences = []
-            names = []
-            for f in fastas:
-                fasta_object = parse_fasta(f)
-                if len(fasta_object.seq) >2:
-                    sequences.append(fasta_object.seq)
-                    names.append(fasta_object.name)
-
-        for sequence, name in zip(sequences, names):
-            sequence = validate_sequence(sequence)
-
-            xticks = validate_xticks(xticks_entry.get())
-            
-            # Set Amylpred credentials in the environment
-            os.environ['AMYLPRED_USERNAME'] = amylpred_username_entry.get()
-            os.environ['AMYLPRED_PASSWORD'] = amylpred_password_entry.get()
+    threshold = validate_threshold(threshold_entry.get())
     
-            analyse_protein(
-                output_folder=output_entry.get(),
-                seq=sequence,
-                description=description_entry.get(),
-                name=name,
-                threshold=threshold,
-                SEG=int(seg_dropdown.get()), 
-                xticks=xticks
-            )
-        messagebox.showinfo("Success", "Analysis complete!")
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to run analysis: {e}")
+    sequence_txt_stripped = sequence_text.get("1.0", tk.END).strip()
+    if sequence_txt_stripped.count('>')==1:
+        # if is fasta format (TODO: use some better function in biotools to detect fasta?)
+        fasta_seq = parse_fasta(sequence_txt_stripped)
+        sequence = fasta_seq.seq
+        sequences = [sequence]
+        names = [name_entry.get()]
+    elif sequence_txt_stripped.count('>')==0:
+        # only sequence
+        sequence = sequence_txt_stripped.replace("\n", "").replace(" ", "")
+        sequences = [sequence]
+        names = [name_entry.get()]
+    elif sequence_txt_stripped.count('>') > 1:
+        fastas = sequence_txt_stripped.split('>')
+        sequences = []
+        names = []
+        for f in fastas:
+            fasta_object = parse_fasta(f)
+            if len(fasta_object.seq) >2:
+                sequences.append(fasta_object.seq)
+                names.append(fasta_object.name)
+
+    for sequence, name in zip(sequences, names):
+        sequence = validate_sequence(sequence)
+
+        xticks = validate_xticks(xticks_entry.get())
+        
+        # Set Amylpred credentials in the environment
+        os.environ['AMYLPRED_USERNAME'] = amylpred_username_entry.get()
+        os.environ['AMYLPRED_PASSWORD'] = amylpred_password_entry.get()
+
+        analyse_protein(
+            output_folder=output_entry.get(),
+            seq=sequence,
+            description=description_entry.get(),
+            name=name,
+            threshold=threshold,
+            SEG=int(seg_dropdown.get()), 
+            xticks=xticks
+        )
+    messagebox.showinfo("Success", "Analysis complete!")
+    #except Exception as e:
+        #messagebox.showerror("Error", f"Failed to run analysis: {e}")
 
 def exit_app():
     save_config({

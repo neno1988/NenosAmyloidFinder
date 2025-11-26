@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import os
 import filecache
 
@@ -23,8 +24,14 @@ SIQGFKAGAGHSNTLQVSTV"""
 ZIPPERDB_DEBUG = False
 
 def fetch_single_zipperdb_result(fasta_sequence):
+
+    options = Options()
+    #options.add_argument("--headless")  # Run Chrome in headless mode
+    options.add_argument("--disable-gpu")  # Optional: avoid GPU-related issues on Windows
+    options.add_argument("--window-size=1920,1080")  # Optional: simulate full screen for page rendering
+    driver = webdriver.Chrome(options = options)
+
     url = "https://zipperdb.mbi.ucla.edu"
-    driver = webdriver.Chrome()
     driver.get(url)
 
     # Find the textarea and input the sequence
