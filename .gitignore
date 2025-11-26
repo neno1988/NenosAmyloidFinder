@@ -1,5 +1,12 @@
 *.pyc
+*.jpg
 *.cache.*
 /output/*.3
 neno_config.json
 /**/secret.json
+*.zip
+/**/*.zip
+*.fasta
+/**/*.fasta
+*.csv
+/**/*.csv
