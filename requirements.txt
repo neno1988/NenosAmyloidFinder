@@ -5,4 +5,4 @@ selenium
 filecache
 bio (biopython)
 
-Python 3.12 max. Biopython could not be installer on python 3.13
+Python 3.12 max. Biopython could not be installed on python 3.13
