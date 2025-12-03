@@ -76,20 +76,26 @@ def create_interactive_heatmaps(lcr_data, seg_treshold, zipperdb_data, amylpred_
     fig.update_layout(
         showlegend=True,
         legend_orientation="h" if legend_position == "top" or legend_position == "bottom" else "v",
-        legend=dict(x=0.5 if legend_position == "top" or legend_position == "bottom" else 1.02, y=1.1 if legend_position == "top" else 0.5, xanchor="center", yanchor="bottom" if legend_position == "top" else "middle"),
+        legend=dict(x=0.3 if legend_position == "top" or legend_position == "bottom" else 1.02, y=1.1 if legend_position == "top" else 0.5, xanchor="center", yanchor="bottom" if legend_position == "top" else "middle"),
         title_text="Protein Analysis",
-        title_x=0.5,
+        title_x=0.3,
         yaxis=dict(showticklabels=False, fixedrange=True),
-        margin=dict(l=150 if name_position == "left" else 50, r=50, t=100, b=50), # margin for name
+        # grow right margin for annotations without stretching plot content
+        margin=dict(l=150 if name_position == "left" else 50, r=200, t=100, b=50),
         height=200, # fixed height
+        width=1800, # fixed width
+        
     )
 
-    # Name placement.
+    # Keep heatmap domain fixed; leave blank space on the right for annotations.
+    fig.update_xaxes(domain=[0, 0.7])
+
+    # Name and annotation placement. TODO: make these available in a configuration file
     name_x = -0.05 if name_position == "left" else 0.5
     name_y = 0.5
     fig.add_annotation(x=name_x, y=name_y, xref='paper', yref='paper', text=name, showarrow=False, font=dict(size=14), textangle=-90 if name_position == "left" else 0)
 
-    parameter_annotations_x = 1.25
+    parameter_annotations_x = 0.85
     parameter_annotations_y = 0.2
     annotations_text = f"SEG Threshold: {seg_treshold}<br>ZipperDB Threshold: {zipperdb_threshold}"
     fig.add_annotation(x=parameter_annotations_x, y=parameter_annotations_y, 
