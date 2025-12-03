@@ -10,3 +10,4 @@ neno_config.json
 /**/*.fasta
 *.csv
 /**/*.csv
+neno_config.json
