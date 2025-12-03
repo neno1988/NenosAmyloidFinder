@@ -20,7 +20,7 @@ def get_xticks_interval(data_length):
 
             return tick_interval
 
-def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshold, name, xticks=0, legend_position="top", name_position="left"):
+def create_interactive_heatmaps(lcr_data, seg_treshold, zipperdb_data, amylpred_data, zipperdb_threshold, name, xticks=0, legend_position="top", name_position="left"):
     """
     Create interactive heatmaps using Plotly.
     ... (docstring) ...
@@ -30,7 +30,7 @@ def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshol
     combined_matrix = np.zeros((11, data_length))
     combined_matrix[0] = lcr_data[0]
 
-    zipperdb_mask = zipperdb_data[0] <= threshold
+    zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
     amylpred_mask = amylpred_data[0] > 4
 
     # Data mapping
@@ -87,7 +87,16 @@ def create_interactive_heatmaps(lcr_data, zipperdb_data, amylpred_data, threshol
     # Name placement.
     name_x = -0.05 if name_position == "left" else 0.5
     name_y = 0.5
-    fig.add_annotation(x=name_x, y=name_y, xref='paper', yref='paper', text=name, showarrow=False, font=dict(size=14, weight='bold'), textangle=-90 if name_position == "left" else 0)
+    fig.add_annotation(x=name_x, y=name_y, xref='paper', yref='paper', text=name, showarrow=False, font=dict(size=14), textangle=-90 if name_position == "left" else 0)
+
+    parameter_annotations_x = 1.25
+    parameter_annotations_y = 0.2
+    annotations_text = f"SEG Threshold: {seg_treshold}<br>ZipperDB Threshold: {zipperdb_threshold}"
+    fig.add_annotation(x=parameter_annotations_x, y=parameter_annotations_y, 
+                       xref='paper', yref='paper', text=annotations_text, 
+                       showarrow=False, 
+                       font=dict(size=14))
+
 
     fig.update_xaxes(title_text="Amino Acid Position")
 

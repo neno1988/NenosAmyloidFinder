@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.options import Options
 import os
 import re
 import filecache
+import json
 # Define the CDC19 protein sequence in FASTA format
 protein_fasta_full = """>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
 MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH
@@ -22,7 +23,7 @@ ILVTRCPRAARFSHLYRGVFPFVFEKEPVSDWTDDVEARINFGIEKAKEFGILKKGDTYV
 SIQGFKAGAGHSNTLQVSTV"""
 
 AMYLPRED_DEBUG = False
-
+DEBUG_SECRET_FILE_PATH = r"C:\Users\Neno\Documents\Git\NenoGeaProject\NenosAmyloidFinder\neno_config.json"
 
 @filecache.filecache(7*24*60*60)
 def fetch_amylpred_results(fasta_sequence):
@@ -38,6 +39,13 @@ def fetch_amylpred_results(fasta_sequence):
     # Get credentials from environment variables
     username = os.environ.get('AMYLPRED_USERNAME') # TODO: get from GUI is not available in environment
     password = os.environ.get('AMYLPRED_PASSWORD') # TODO: get from GUI is not available in environment
+
+    if not username or not password:
+        if os.path.exists(DEBUG_SECRET_FILE_PATH): # TOCO: create and use configuration handler class or functions
+            with open(DEBUG_SECRET_FILE_PATH, 'r') as f:
+                config = json.load(f)
+        username = config.get("amylpred_username")
+        password = config.get("amylpred_password"   )
 
     if not username or not password:
         raise ValueError("Amylpred credentials not found. Please provide username and password in the GUI.")
@@ -149,12 +157,7 @@ def get_amylpred_data(protein_fasta, plot_it = False):
         # Construct the path to the file
         results_filename = os.path.join(current_script_dir, "Amylpred_CDC19_results.txt") 
     else:
-            
-        # Fetch the results URL
         results_url = fetch_amylpred_results(protein_fasta)
-
-        # Download the results file
-
         results_filename = download_results_file(results_url)
 
     # Parse the results file

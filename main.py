@@ -46,15 +46,29 @@ def main():
     #fig1, _ = ng.nice_heatmap_plot(seg_data)
     #fig1.show()
         # Create interactive plot
-    fig = ng.visualization.create_interactive_heatmaps(
-        lcr_data=seg_data.reshape(1, -1),
-        zipperdb_data=zipperDE_data,
-        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
-        threshold=-23,
-        name="name",
-        xticks=50
-    )
-    fig.show()
+    debugging_ng = False
+    if debugging_ng:
+        fig = ng.visualization.create_interactive_heatmaps(
+            lcr_data=seg_data.reshape(1, -1),
+            seg_treshold = 25,
+            zipperdb_data=zipperDE_data,
+            amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
+            zipperdb_threshold=-23,
+            name="name",
+            xticks=50
+        )
+        fig.show()
+    else: 
+        # Create interactive plot
+        fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
+            lcr_data=seg_data.reshape(1, -1),
+            seg_treshold = 25,
+            zipperdb_data=zipperDE_data,
+            amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
+            zipperdb_threshold=-23,
+            name="name",
+            xticks=0
+        )
 
 
 @filecache.filecache(24*60*60)
@@ -100,9 +114,10 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     # Create interactive plot
     fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
         lcr_data=seg_data.reshape(1, -1),
+        seg_treshold = SEG,
         zipperdb_data=zipperDE_data,
         amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
-        threshold=threshold,
+        zipperdb_threshold=threshold,
         name=name,
         xticks=xticks
     )
@@ -192,9 +207,9 @@ def save_config(values):
         json.dump(values, f)
 
 # Function to load configuration
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
+def load_config(path = CONFIG_FILE):
+    if os.path.exists(path):
+        with open(path, 'r') as f:
             return json.load(f)
     return {}
 
