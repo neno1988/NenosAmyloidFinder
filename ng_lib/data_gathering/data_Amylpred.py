@@ -13,7 +13,7 @@ import json
 
 
 # Define the CDC19 protein sequence in FASTA format
-protein_fasta_full = """>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
+CDC19_FASTA_FULL = """>sp|P00549|KPYK1_YEAST Pyruvate kinase 1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=CDC19 PE=1 SV=2
 MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH
 KSVIDNARKSEELYPGRPLAIALDTKGPEIRTGTTTNDVDYPIPPNHEMIFTTDDKYAKA
 CDDKIMYVDYKNITKVISAGRIIYVDDGVLSFQVLEVVDDKTLKVKALNAGKICSHKGVN
@@ -23,6 +23,8 @@ LESMTYNPRPTRAEVSDVGNAILDGADCVMLSGETAKGNYPINAVTTMAETAVIAEQAIA
 YLPNYDDMRNCTPKPTSTTETVAASAVAAVFEQKAKAIIVLSTSGTTPRLVSKYRPNCPI
 ILVTRCPRAARFSHLYRGVFPFVFEKEPVSDWTDDVEARINFGIEKAKEFGILKKGDTYV
 SIQGFKAGAGHSNTLQVSTV"""
+
+CDC19_AMYLPRED2_RESULT_FILE =r"\ng_lib\data_gathering\CDC19_Amylpred2_results.txt"
 
 AMYLPRED_DEBUG = False
 DEBUG_SECRET_FILE_PATH = r"C:\Users\Neno\Documents\Git\NenoGeaProject\NenosAmyloidFinder\neno_config.json"
@@ -184,29 +186,27 @@ def get_amylpred_data(protein_fasta, plot_it = False):
         plt.show()
     return scores
 
-
-def gather_cdc19_data():
-    cdc19Fasta = "MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH\
-    KSVIDNARKSEELYPGRPLAIALDTKGPEIRTGTTTNDVDYPIPPNHEMIFTTDDKYAKA\
-    CDDKIMYVDYKNITKVISAGRIIYVDDGVLSFQVLEVVDDKTLKVKALNAGKICSHKGVN\
-    LPGTDVDLPALSEKDKEDLRFGVKNGVHMVFASFIRTANDVLTIREVLGEQGKDVKIIVK\
-    IENQQGVNNFDEILKVTDGVMVARGDLGIEIPAPEVLAVQKKLIAKSNLAGKPVICATQM\
-    LESMTYNPRPTRAEVSDVGNAILDGADCVMLSGETAKGNYPINAVTTMAETAVIAEQAIA\
-    YLPNYDDMRNCTPKPTSTTETVAASAVAAVFEQKAKAIIVLSTSGTTPRLVSKYRPNCPI\
-    ILVTRCPRAARFSHLYRGVFPFVFEKEPVSDWTDDVEARINFGIEKAKEFGILKKGDTYV\
-    SIQGFKAGAGHSNTLQVSTV"
-    get_zipperDB_data(cdc19Fasta, plot_it = True)
-    
-
-
-
 def test_single_fasta():
     prepare_environment()
-    fetch_amylpred_results(protein_fasta_full)
+    res_url = fetch_amylpred_results(CDC19_FASTA_FULL)
+    assert(res_url[0:35]=="http://thalis.biol.uoa.gr/AMYLPRED2")
+    print(res_url)
+
 
 def test_multi_fasta():
     prepare_environment()
-    fetch_amylpred_results(protein_fasta_full + "\n\n" + protein_fasta_full)
+    fetch_amylpred_results(CDC19_FASTA_FULL + "\n\n" + CDC19_FASTA_FULL)
+
+
+def test_consensus_vec():
+    test_result_file_path = os.getcwd() + CDC19_AMYLPRED2_RESULT_FILE
+    with open(test_result_file_path, 'r') as file:
+        lines = file.readlines()
+    consensus_dict = parse_results_file(test_result_file_path)
+    consensus_vec = get_consensus_vec(consensus_dict, len(CDC19_FASTA_FULL))
+    print(consensus_vec)
+
+
 
 def load_user_and_pass():
     import json
@@ -215,6 +215,7 @@ def load_user_and_pass():
         with open(SECRET_FILE, 'r') as f:
             return json.load(f)
     return {}
+
 def prepare_environment():
         user_pass_dict = load_user_and_pass()
             # Set Amylpred credentials in the environment
@@ -223,4 +224,5 @@ def prepare_environment():
 
 if __name__ == "__main__":
     # get_amylpred_data(protein_fasta_full)
-    test_single_fasta()
+    # test_single_fasta()
+    test_consensus_vec()
