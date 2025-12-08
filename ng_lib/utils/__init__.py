@@ -1,1 +1,1 @@
-from .utils import FastaSeq
+from .utils import *

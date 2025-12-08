@@ -96,7 +96,6 @@ def fetch_amylpred_results(fasta_sequence):
     return results_url
 
 
-
 def download_results_file(url):
     # TODO: just return response.content
     response = requests.get(url)

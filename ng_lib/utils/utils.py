@@ -15,6 +15,15 @@ def load_config(path = CONFIG_FILE):
             return json.load(f)
     return {}
 
+# Function to parse FASTA file
+def parse_fasta_from_file(file_path):
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        description = lines[0].strip()
+        sequence = ''.join(line.strip() for line in lines[1:])
+        name = description.split(' ')[0][1:]  # Extract ID from description
+        return name, description, sequence
+
 
 class FastaSeq:
     seq:str

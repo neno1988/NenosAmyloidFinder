@@ -20,7 +20,17 @@ def get_xticks_interval(data_length):
 
             return tick_interval
 
-def create_interactive_heatmaps(lcr_data, seg_treshold, zipperdb_data, amylpred_data, zipperdb_threshold, name, xticks=0, legend_position="top", name_position="left"):
+def create_interactive_heatmaps(lcr_data, 
+                                seg_treshold, 
+                                zipperdb_data, 
+                                amylpred_data, 
+                                zipperdb_threshold, 
+                                name, 
+                                xticks=0, 
+                                legend_position="top", 
+                                name_position="left",
+                                image_height=200, 
+                                image_width=1800):
     """
     Create interactive heatmaps using Plotly.
     ... (docstring) ...
@@ -82,8 +92,8 @@ def create_interactive_heatmaps(lcr_data, seg_treshold, zipperdb_data, amylpred_
         yaxis=dict(showticklabels=False, fixedrange=True),
         # grow right margin for annotations without stretching plot content
         margin=dict(l=150 if name_position == "left" else 50, r=200, t=100, b=50),
-        height=200, # fixed height
-        width=1800, # fixed width
+        height=image_height, # fixed height
+        width=image_width, # fixed width
         
     )
 

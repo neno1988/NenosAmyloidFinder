@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import json
 import os
-from ng_lib.utils import FastaSeq
+from ng_lib.utils import FastaSeq, save_config, load_config, parse_fasta_from_file
 from ng_lib.analysis import analyse_protein
 
 def create_gui(config):
@@ -110,7 +110,7 @@ def browse_output(root):
 def import_fasta(root):
     file_path = filedialog.askopenfilename(filetypes=[("FASTA files", "*.fasta;*.fa")])
     if file_path:
-        name, description, sequence = parse_fasta_from_file(file_path)
+        name, description, sequence = gui_parse_fasta(file_path)
         if name and description and sequence:
             root.name_entry.delete(0, tk.END)
             root.name_entry.insert(0, name)
@@ -179,19 +179,13 @@ def run_analysis(root):
         #messagebox.showerror("Error", f"Failed to run analysis: {e}")
 
 # Function to parse FASTA file
-def parse_fasta_from_file(file_path):
+def gui_parse_fasta(file_path):
     try:
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-            description = lines[0].strip()
-            sequence = ''.join(line.strip() for line in lines[1:])
-            name = description.split(' ')[0][1:]  # Extract ID from description
-            return name, description, sequence
+        parse_fasta_from_file(file_path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to parse FASTA file: {e}")
         return None, None, None
     
-
 def exit_app(root):
     save_config({
         "name": root.name_entry.get(),
@@ -207,12 +201,9 @@ def exit_app(root):
     root.destroy()
 
 
-### ------------------------------- GUI STUFF ---------------------------------------------
 
-
-### ------------------------------- DATA VALIDATION STUFF ---------------------
+### ------------------------------- DATA VALIDATION  ---------------------
 import re
-
 def validate_threshold(threshold):
     try:
         threshold = float(threshold)
@@ -234,4 +225,4 @@ def validate_xticks(xticks):
             raise ValueError("X ticks must be greater or equal to 0.")
         return xticks
     except ValueError as e:
-        raise ValueError(f"Invalid X ticks value: {e}")
+        raise ValueError(f"Invalid X ticks value: {e}")   

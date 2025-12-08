@@ -14,7 +14,7 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
 
     # Get SEG and ZipperDB data
     seg_data = ng.get_SEG_data(fasta_protein, seg=SEG)
-    zipperDE_data = ng.get_zipperDB_data(fasta_protein)
+    zipperDB_data = ng.get_zipperDB_data(fasta_protein)
 
     # Get Amylpred data if credentials are provided
     try:
@@ -30,42 +30,43 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
         if SEG==0:
             # TODO: only return fig  in nice_heatmap_plot?
             white_cmap = ["white", "white"]
-            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
+            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
             # Save the figure as a JPEG file
             file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
             fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
             fig.show() 
 
         else:
-            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDE_data[0], threshold=threshold, name=name, xticks=xticks)
+            fig = ng.heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, xticks=xticks)
             # Save the figure as a JPEG file
             file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
             fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
             fig.show() 
     
     # Create interactive plot
+    IMAGE_HEIGHT = 200
+    IMAGE_WIDTH = 1800
     fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
         lcr_data=seg_data.reshape(1, -1),
         seg_treshold = SEG,
-        zipperdb_data=zipperDE_data,
-        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
+        zipperdb_data=zipperDB_data,
+        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDB_data),
         zipperdb_threshold=threshold,
         name=name,
-        xticks=xticks
+        xticks=xticks,
+        image_height=IMAGE_HEIGHT, 
+        image_width=IMAGE_WIDTH 
     )
     #fig.show()
 
     # Save the figure as HTML
     name = re.sub(r'[^\w_. -]', '_', name)
+    name_and_parameters = f"{name}_SEG{SEG}_ZDB{threshold}"
     #output_folder = os.path.dirname(output_folder)
-    html_file = os.path.join(output_folder, f"{name}_analysis.html")
+    html_file = os.path.join(output_folder, f"{name_and_parameters}_analysis.html")
     html_file = os.path.normpath(html_file)
-    
-    # Delete next line TODO FIXME
-    #html_file = r'C:/Users/Neno/Desktop/NenoGeaProject/Output/November26/CDC19_analysis.html'
-
-    png_file = os.path.join(output_folder, f"{name}_image.png")
-    json_file = os.path.join(output_folder, f"{name}_data.json")
+    png_file = os.path.join(output_folder, f"{name_and_parameters}_image.png")
+    json_file = os.path.join(output_folder, f"{name_and_parameters}_data.json")
     
     fig.write_html(html_file)
     
@@ -74,7 +75,7 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     fig.update_layout(title_text=None)
 
 
-    fig.write_image(png_file, engine='kaleido', width = 900, height = 180)
+    fig.write_image(png_file, engine='kaleido', width = IMAGE_WIDTH, height = IMAGE_HEIGHT)
 
 
     # Generate output data file
@@ -82,7 +83,7 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     data_file["fasta_seq"] = fasta_protein.seq
     data_file["fasta_description"] = fasta_protein.description
     data_file["fasta_name"] = fasta_protein.name
-    data_file["ZipperDB"] = zipperDE_data.tolist()
+    data_file["ZipperDB"] = zipperDB_data.tolist()
     data_file["Amylpred"] = amylpred_data.tolist()
     data_file["SEG"] = seg_data.tolist()
 

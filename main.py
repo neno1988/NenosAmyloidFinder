@@ -26,7 +26,7 @@ cdc19Fasta = "MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH\
 test_fasta = ">sp|P32119|PRDX2_HUMAN Peroxiredoxin-2 OS=Homo sapiens OX=9606 GN=PRDX2 PE=1 SV=5MASGNARIGKPAPDFKATAVVDGAFKEVKLSDYKGKYVVLFFYPLDFTFVCPTEIIAFSNRAEDFRKLGCEVLGVSVDSQFTHLAWINTPRKEGGLGPLNIPLLADVTRRLSEDYGVLKTDEGIAYRGLFIIDGKGVLRQITVNDLPVGRSVDEALRLVQAFQYTDEHGEVCPAGWKPGSDTIKPNVDDSKEYFSKHN"
 
 
-def main():
+def main_debug():
     
     Grasp55 = ng.utils.FastaSeq()
     Grasp55.description =  ">sp|Q9H8Y8|GORS2_HUMAN Golgi reassembly-stacking protein 2 OS=Homo sapiens OX=9606 GN=GORASP2 PE=1 SV=3"
@@ -81,4 +81,4 @@ if __name__ == "__main__":
 
     root.mainloop()
 
-    #main() # debugging
+    #main_debug() # debugging
