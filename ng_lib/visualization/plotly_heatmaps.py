@@ -43,16 +43,12 @@ def create_interactive_heatmaps(lcr_data,
     zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
     amylpred_mask = amylpred_data[0] > 4
 
-    # Data mapping
-    data_to_color = {
-        2: 'lightgray',  # None
-        3: 'blue',       # Only Amylpred
-        4: 'yellow',     # Only ZipperDB
-        5: 'green'       # Both
-    }
-
+    # old way - just replace the 11 lines with 5 (both), 4 (zipperDB only), 3 (amylpred only), 2 (none)
     for i in range(1, 11):
         combined_matrix[i] = np.where(zipperdb_mask & amylpred_mask, 5, np.where(zipperdb_mask, 4, np.where(amylpred_mask, 3, 2)))
+    
+    
+    
     fig = go.Figure(data=go.Heatmap(
         z=combined_matrix,
         zmin=0,
