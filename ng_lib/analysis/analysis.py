@@ -8,7 +8,7 @@ import plotly as plt
 from ng_lib.data_gathering import get_SEG_data, get_zipperDB_data, get_amylpred_data
 from ng_lib.utils import FastaSeq
 from ng_lib.plot import heatmaps_binary_non_binary
-from ng_lib.visualization.plotly_heatmaps import create_interactive_heatmaps
+from ng_lib.visualization.plotly_heatmaps import create_interactive_heatmaps_v2 as create_interactive_heatmaps
 import os
 import json
 import re
@@ -65,18 +65,13 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
             # TODO: only return fig  in nice_heatmap_plot?
             white_cmap = ["white", "white"]
             fig = heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
-            # Save the figure as a JPEG file
-            file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
-            fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-            fig.show() 
-
         else:
             fig = heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, xticks=xticks)
             # Save the figure as a JPEG file
-            file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
-            fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-            fig.show() 
-    
+        file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
+        fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
+        fig.show() 
+
     # Create interactive plot
     IMAGE_HEIGHT = 200
     IMAGE_WIDTH = 1800

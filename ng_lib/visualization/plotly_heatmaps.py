@@ -20,6 +20,45 @@ def get_xticks_interval(data_length):
 
             return tick_interval
 
+def make_axes(fig, data_length, xticks):
+    fig.update_xaxes(title_text="Amino Acid Position")
+
+    # Dynamic xticks or fixed
+    if xticks > 0:
+        x_ticks_interval = xticks
+    else:
+        x_ticks_interval = get_xticks_interval(data_length)
+
+    fig.update_layout(
+            xaxis = dict(
+                tickmode = 'linear',
+                tick0 = 0,
+                dtick = x_ticks_interval,
+            ),
+            font=dict(size=18, color="black"))
+
+
+
+def make_annotations(fig, name, name_position, seg_treshold, zipperdb_threshold):
+        # Keep heatmap domain fixed; leave blank space on the right for annotations.
+    fig.update_xaxes(domain=[0, 0.7])
+
+    # Name and annotation placement. TODO: make these available in a configuration file
+    name_x = -0.05 if name_position == "left" else 0.5
+    name_y = 0.5
+    fig.add_annotation(x=name_x, y=name_y, xref='paper', yref='paper', text=name, showarrow=False, font=dict(size=14), textangle=-90 if name_position == "left" else 0)
+
+    parameter_annotations_x = 0.85
+    parameter_annotations_y = 0.2
+    annotations_text = f"SEG Threshold: {seg_treshold}<br>ZipperDB Threshold: {zipperdb_threshold}"
+    fig.add_annotation(x=parameter_annotations_x, y=parameter_annotations_y, 
+                       xref='paper', yref='paper', text=annotations_text, 
+                       showarrow=False, 
+                       font=dict(size=14))
+    return fig
+
+
+
 def create_interactive_heatmaps(lcr_data, 
                                 seg_treshold, 
                                 zipperdb_data, 
@@ -92,38 +131,103 @@ def create_interactive_heatmaps(lcr_data,
         width=image_width, # fixed width
         
     )
+    make_annotations(fig, name, name_position, seg_treshold, zipperdb_threshold)
+    make_axes(fig, data_length, xticks)
 
-    # Keep heatmap domain fixed; leave blank space on the right for annotations.
-    fig.update_xaxes(domain=[0, 0.7])
-
-    # Name and annotation placement. TODO: make these available in a configuration file
-    name_x = -0.05 if name_position == "left" else 0.5
-    name_y = 0.5
-    fig.add_annotation(x=name_x, y=name_y, xref='paper', yref='paper', text=name, showarrow=False, font=dict(size=14), textangle=-90 if name_position == "left" else 0)
-
-    parameter_annotations_x = 0.85
-    parameter_annotations_y = 0.2
-    annotations_text = f"SEG Threshold: {seg_treshold}<br>ZipperDB Threshold: {zipperdb_threshold}"
-    fig.add_annotation(x=parameter_annotations_x, y=parameter_annotations_y, 
-                       xref='paper', yref='paper', text=annotations_text, 
-                       showarrow=False, 
-                       font=dict(size=14))
+    return fig
 
 
-    fig.update_xaxes(title_text="Amino Acid Position")
 
-    # Dynamic xticks or fixed
-    if xticks > 0:
-        x_ticks_interval = xticks
-    else:
-        x_ticks_interval = get_xticks_interval(data_length)
+def create_interactive_heatmaps_v2(lcr_data, 
+                                seg_treshold, 
+                                zipperdb_data, 
+                                amylpred_data, 
+                                zipperdb_threshold, 
+                                name, 
+                                xticks=0, 
+                                legend_position="top", 
+                                name_position="left",
+                                image_height=200, 
+                                image_width=1800):
+    """
+    Create interactive heatmaps using Plotly.
+    ... (docstring) ...
+    """
+
+    HEATMAP_HEIGHT = 11
+    MAX_AMYLPRED_CONSENSUS = 6
+    NUMBER_OF_COLORS = 10
+
+    data_length = len(lcr_data[0])
+    combined_matrix = np.zeros((HEATMAP_HEIGHT, data_length))
+    hover = np.zeros((HEATMAP_HEIGHT, data_length))
+    
+    combined_matrix[0] = lcr_data[0]
+    combined_matrix[1] = combined_matrix[0]
+    hover[0] = combined_matrix[0]
+    hover[1] = combined_matrix[1]
+
+    zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
+    combined_matrix[HEATMAP_HEIGHT - 1] = np.where(zipperdb_mask, 3,0)
+    combined_matrix[HEATMAP_HEIGHT - 2] = combined_matrix[HEATMAP_HEIGHT - 1]
+    hover[HEATMAP_HEIGHT - 1] = zipperdb_mask.astype(int)
+    hover[HEATMAP_HEIGHT - 2] = zipperdb_mask.astype(int)
+    
+
+    amylpred_data = amylpred_data[0]
+
+    # old way - just replace the 11 lines with 5 (both), 4 (zipperDB only), 3 (amylpred only), 2 (none)
+    for i in range(2, 9):
+        combined_matrix[i] = amylpred_data + (NUMBER_OF_COLORS - MAX_AMYLPRED_CONSENSUS) # shift colors to leave the first spots to LCR and zipperDB
+        hover[i] = amylpred_data
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=combined_matrix,
+        zmin=0,
+        zmax=10,
+        colorscale=[ # TODO: using colormap more directly might make this easier
+            [0, 'white'],       # No LCR, (zipperDB)
+            [0.1, 'darkgray'],  # LCR (no zipperDB)
+            [0.2, 'lightgray'], # None
+            [0.3, 'orange'],      # 
+            [0.4, 'white'],     # 
+            [1, 'green']        # Both
+            
+        ],
+        showscale=False,
+        hoverongaps=False,
+        name='Combined',
+        text=hover,
+        hovertemplate = "%{text}<extra></extra>"
+    ))
+
+    # Legend using plotly legend.
+    legend_items = [
+        #{'label': 'No LCR', 'color': 'white'},
+        {'label': 'LCR', 'color': 'darkgray'},
+        #{'label': 'None', 'color': 'lightgray'},
+        {'label': 'Amylpred', 'color': 'green'},
+        {'label': 'ZipperDB', 'color': 'orange'}
+        #{'label': 'Both', 'color': 'green'}
+    ]
+
+    for item in legend_items:
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers', marker=dict(color=item['color']), name=item['label']))
 
     fig.update_layout(
-            xaxis = dict(
-                tickmode = 'linear',
-                tick0 = 0,
-                dtick = x_ticks_interval,
-            ),
-            font=dict(size=18, color="black"))
+        showlegend=True,
+        legend_orientation="h" if legend_position == "top" or legend_position == "bottom" else "v",
+        legend=dict(x=0.3 if legend_position == "top" or legend_position == "bottom" else 1.02, y=1.1 if legend_position == "top" else 0.5, xanchor="center", yanchor="bottom" if legend_position == "top" else "middle"),
+        title_text="Protein Analysis",
+        title_x=0.3,
+        yaxis=dict(showticklabels=False, fixedrange=True),
+        # grow right margin for annotations without stretching plot content
+        margin=dict(l=150 if name_position == "left" else 50, r=200, t=100, b=50),
+        height=image_height, # fixed height
+        width=image_width, # fixed width
+        
+    )
+    make_annotations(fig, name, name_position, seg_treshold, zipperdb_threshold)
+    #make_axes(fig, data_length, xticks)
 
     return fig
