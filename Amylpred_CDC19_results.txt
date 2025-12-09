@@ -1,0 +1,105 @@
+AMYLPRED2
+---------
+Job ID: 1765310021771
+Job name: myseq
+Job Submitted: 21:53:41, 9 Dec 2025 (local time)
+Sequence length: 152
+
+CONSENSUS RESULTS
+
+...based on at least 4 out of 8 successful methods. The '#' symbol marks the hits:
+
+
+                         ....,....|....,....|....,....|....,....|....,....|
+                   myseq MCSLPMARYYIIKYADQKALYTRDGQLLVGDPVADNCCAEKICILPNRGL 1-50
+              CONSENSUS2 -----##########-------------------------#######---
+              CONSENSUS3 -----##########--------------------------#####----
+        >---> CONSENSUS4 -----#########------------------------------------
+              CONSENSUS5 --------------------------------------------------
+              CONSENSUS6 --------------------------------------------------
+              CONSENSUS7 --------------------------------------------------
+              CONSENSUS8 --------------------------------------------------
+   Amyloidogenic Pattern --------------------------------------------------
+ Average Packing Density -----#########---------------------------#####----
+  Beta-strand contiguity -----##########-----------------------------------
+Hexapeptide Conf. Energy -##############-------------------------#######---
+                 NetCSSP -----###########################------#########---
+                   Pafig --------------------------------------------------
+                  SecStr --------------------------------------------------
+                   TANGO --------------------------------------------------
+
+                         ....,....|....,....|....,....|....,....|....,....|
+                   myseq ARTKVPIFLGIQGGSRCLACVETEEGPSLQLEDVNIEELYKGGEEATRFT 51-100
+              CONSENSUS2 ---#########--#########--------##-------------####
+              CONSENSUS3 ---#########-----------------------------------###
+        >---> CONSENSUS4 ----########------------------------------------##
+              CONSENSUS5 -----######--------------------------------------#
+              CONSENSUS6 ------####----------------------------------------
+              CONSENSUS7 --------------------------------------------------
+              CONSENSUS8 --------------------------------------------------
+   Amyloidogenic Pattern -------------------------------######-------------
+ Average Packing Density -----#####-------------------------------------###
+  Beta-strand contiguity -###########-------------------------------------#
+Hexapeptide Conf. Energy ----########--#########-----------------------####
+                 NetCSSP ---#########---#########-########-------------####
+                   Pafig ---############-----------------------------------
+                  SecStr ------------------------------------------------##
+                   TANGO ------#####---------------------------------------
+
+                         ....,....|....,....|....,....|....,....|....,....|
+                   myseq FFQSSSGSAFRLEAAAWPGWFLCGPAEPQQPVQLTKESEPSARTKFYFEQ 101-150
+              CONSENSUS2 ####---######----########--------###--------######
+              CONSENSUS3 ###---------------#####---------------------------
+        >---> CONSENSUS4 #-------------------------------------------------
+              CONSENSUS5 --------------------------------------------------
+              CONSENSUS6 --------------------------------------------------
+              CONSENSUS7 --------------------------------------------------
+              CONSENSUS8 --------------------------------------------------
+   Amyloidogenic Pattern --------------------------------------------------
+ Average Packing Density ###--------------######---------------------######
+  Beta-strand contiguity #-------------------------------------------------
+Hexapeptide Conf. Energy ####------------##########------------------------
+                 NetCSSP #####-#######-----#######---########------########
+                   Pafig -------########------------------######-----------
+                  SecStr --------------------------------------------------
+                   TANGO --------------------------------------------------
+
+                         ..
+                   myseq SW 151-152
+              CONSENSUS2 --
+              CONSENSUS3 --
+        >---> CONSENSUS4 --
+              CONSENSUS5 --
+              CONSENSUS6 --
+              CONSENSUS7 --
+              CONSENSUS8 --
+   Amyloidogenic Pattern --
+ Average Packing Density --
+  Beta-strand contiguity --
+Hexapeptide Conf. Energy --
+                 NetCSSP #-
+                   Pafig --
+                  SecStr --
+                   TANGO --
+
+HITS
+
+   Amyloidogenic Pattern: 82-87
+ Average Packing Density: 6-14, 42-46, 56-60, 98-103, 118-123, 145-150
+  Beta-strand contiguity: 6-15, 52-62, 100-101
+Hexapeptide Conf. Energy: 2-15, 41-47, 55-62, 65-73, 97-104, 117-126
+                 NetCSSP: 6-32, 39-47, 54-62, 66-74, 76-83, 97-105, 107-113, 119-125, 129-136, 143-151
+                   Pafig: 54-65, 108-115, 134-139
+                  SecStr: 99-100
+                   TANGO: 57-61
+              CONSENSUS2: 6-15, 41-47, 54-62, 65-73, 82-83, 97-104, 108-113, 118-125, 134-136, 145-150
+              CONSENSUS3: 6-15, 42-46, 54-62, 98-103, 119-123
+        >---> CONSENSUS4: 6-14, 55-62, 99-101
+              CONSENSUS5: 56-61, 100-100
+              CONSENSUS6: 57-60
+              CONSENSUS7:
+              CONSENSUS8:
+
+**NOTE: If you submitted a protein precursor sequence, it is likely that a consensus hit
+within the first 25 residues represents a possible signal peptide. Please verify this by
+consulting an appropriate database or by using an appropriate prediction tool.
