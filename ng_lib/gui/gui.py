@@ -40,7 +40,7 @@ def create_gui(config):
     root.sequence_text.configure(yscrollcommand=root.sequence_scrollbar.set)
 
     # Import from FASTA button
-    root.import_button = ttk.Button(root.protein_frame, text="Import from FASTA", command=lambda: import_fasta())
+    root.import_button = ttk.Button(root.protein_frame, text="Import from FASTA", command=lambda: import_fasta(root))
     root.import_button.grid(row=3, column=1, sticky="e")
     # Parameters Frame
     root.parameters_frame = ttk.LabelFrame(root, text="Parameters")
@@ -83,7 +83,7 @@ def create_gui(config):
     root.output_entry = ttk.Entry(root.parameters_frame, width=40)
     root.output_entry.grid(row=3, column=1, sticky="w")
     root.output_entry.insert(0, config.get("output_folder", ""))
-    root.output_button = ttk.Button(root.parameters_frame, text="Browse", command=lambda: browse_output())
+    root.output_button = ttk.Button(root.parameters_frame, text="Browse", command=lambda: browse_output(root))
     root.output_button.grid(row=3, column=2, sticky="e")
     # Add X ticks parameter
     root.xticks_label = ttk.Label(root.parameters_frame, text="X ticks (0=auto):")
@@ -181,10 +181,11 @@ def run_analysis(root):
 # Function to parse FASTA file
 def gui_parse_fasta(file_path):
     try:
-        parse_fasta_from_file(file_path)
+        name, description, sequence =parse_fasta_from_file(file_path)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to parse FASTA file: {e}")
-        return None, None, None
+        name, description, sequence =  None, None, None
+    return name, description, sequence
     
 def exit_app(root):
     save_config({
