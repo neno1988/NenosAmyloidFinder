@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import plotly as plt
-from ng_lib.data_gathering import get_SEG_data, get_zipperDB_data, get_amylpred_data
+import ng_lib.data_gathering as dg
 from ng_lib.utils import FastaSeq
 from ng_lib.plot import heatmaps_binary_non_binary
 from ng_lib.visualization.plotly_heatmaps import create_interactive_heatmaps_v2 as create_interactive_heatmaps
@@ -37,22 +37,24 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     fasta_protein.name = name
 
     # Get SEG and ZipperDB data
+    seg_tool_parameters = dg.SEGDataGatheringToolParameters(seg=SEG)
+    seg_tool = dg.SEGDataGatheringTool()
     if debug_SEG_data is not None:
         seg_data = debug_SEG_data
     else:
-        seg_data = get_SEG_data(fasta_protein, seg=SEG)
+        seg_data = seg_tool.get_data_from_sequence(fasta_protein, parameters=seg_tool_parameters)
 
     if debug_zipperDB_data is not None:
         zipperDB_data = debug_zipperDB_data
     else:
-        zipperDB_data = get_zipperDB_data(fasta_protein)
+        zipperDB_data = dg.get_zipperDB_data(fasta_protein)
 
     # Get Amylpred data if credentials are provided
     if debug_amylpred_data is not None:
         amylpred_data = debug_amylpred_data
     else:
         try:
-            amylpred_data = get_amylpred_data(fasta_protein.seq)
+            amylpred_data = dg.get_amylpred_data(fasta_protein.seq)
         except Exception as e:
             # TODO: reinstate warning
             # messagebox.showwarning("Warning", f"Failed to get Amylpred data: {str(e)}")
