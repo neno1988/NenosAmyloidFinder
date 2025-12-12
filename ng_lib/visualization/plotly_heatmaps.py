@@ -136,7 +136,66 @@ def create_interactive_heatmaps(lcr_data,
 
     return fig
 
+def normalize_data(data, min=None, max=None ):
+    if min is None:
+        min = np.min(data)
+    if max is None:
+        max = np.max(data)
+    normalized = (data - min) / (max - min)
+    return normalized
 
+def dedicated_prepare_colormap_matrix(lcr_data, zipperdb_data, amylpred_data, zipperdb_threshold):
+  
+    HEATMAP_HEIGHT = 11    
+    LCR_DATA_ROWS = 2
+    ZDB_DATA_ROWS = 2
+    AMYLPRED_DATA_ROWS = HEATMAP_HEIGHT - LCR_DATA_ROWS - ZDB_DATA_ROWS
+    
+    MAX_AMYLPRED_CONSENSUS = 6
+    NUMBER_OF_COLORS = 10
+
+    # initializations
+    data_length = len(lcr_data[0])
+    colormap_matrix = np.zeros((HEATMAP_HEIGHT, data_length))
+    hover = np.zeros((HEATMAP_HEIGHT, data_length))
+    current_row = 0    
+    colormap_offset = 0
+    
+    # LCR data - top, 0 to 1
+    from_row = current_row
+    to_row = current_row + LCR_DATA_ROWS
+    colormap_matrix[from_row:to_row] = lcr_data[0]
+    hover[from_row:to_row] = lcr_data[0]
+    current_row += LCR_DATA_ROWS
+    colormap_offset += 2
+
+    # Amylpred data - middle, 2 to 3
+
+    from_row = current_row
+    to_row = current_row + AMYLPRED_DATA_ROWS
+    amylpred_data = amylpred_data[0]
+    colormap_matrix[from_row:to_row] = colormap_offset + normalize_data(amylpred_data, max=MAX_AMYLPRED_CONSENSUS, min=0) # shift colors to leave the first spots to LCR and zipperDB
+    hover[from_row:to_row] = amylpred_data
+    current_row += AMYLPRED_DATA_ROWS
+    colormap_offset += 2
+
+    # ZipperDB data - bottom, 4 to 5
+    from_row = current_row
+    to_row = current_row + ZDB_DATA_ROWS
+
+    zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
+    colormap_matrix[from_row:to_row] = colormap_offset + np.where(zipperdb_mask, 1,0)
+    hover[from_row:to_row] = zipperdb_mask.astype(int)
+    return colormap_matrix, hover
+
+def generalized_prepare_colormap_matrix(tools_list, data_length):
+    HEATMAP_HEIGHT = 11
+
+    # initializations
+    colormap_matrix = np.zeros((HEATMAP_HEIGHT, data_length))
+    hover = np.zeros((HEATMAP_HEIGHT, data_length))
+    current_row = 0    
+    colormap_offset = 0
 
 def create_interactive_heatmaps_v2(lcr_data, 
                                 seg_treshold, 
@@ -153,45 +212,21 @@ def create_interactive_heatmaps_v2(lcr_data,
     Create interactive heatmaps using Plotly.
     ... (docstring) ...
     """
-
-    HEATMAP_HEIGHT = 11
-    MAX_AMYLPRED_CONSENSUS = 6
-    NUMBER_OF_COLORS = 10
-
-    data_length = len(lcr_data[0])
-    combined_matrix = np.zeros((HEATMAP_HEIGHT, data_length))
-    hover = np.zeros((HEATMAP_HEIGHT, data_length))
-    
-    combined_matrix[0] = lcr_data[0]
-    combined_matrix[1] = combined_matrix[0]
-    hover[0] = combined_matrix[0]
-    hover[1] = combined_matrix[1]
-
-    zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
-    combined_matrix[HEATMAP_HEIGHT - 1] = np.where(zipperdb_mask, 3,0)
-    combined_matrix[HEATMAP_HEIGHT - 2] = combined_matrix[HEATMAP_HEIGHT - 1]
-    hover[HEATMAP_HEIGHT - 1] = zipperdb_mask.astype(int)
-    hover[HEATMAP_HEIGHT - 2] = zipperdb_mask.astype(int)
-    
-
-    amylpred_data = amylpred_data[0]
-
-    # old way - just replace the 11 lines with 5 (both), 4 (zipperDB only), 3 (amylpred only), 2 (none)
-    for i in range(2, 9):
-        combined_matrix[i] = amylpred_data + (NUMBER_OF_COLORS - MAX_AMYLPRED_CONSENSUS) # shift colors to leave the first spots to LCR and zipperDB
-        hover[i] = amylpred_data
-    
+    colormap_matrix, hover = dedicated_prepare_colormap_matrix(lcr_data, zipperdb_data, amylpred_data, zipperdb_threshold)
+    zipperdb_colors = ["White", "darkgray"]
+    lcr_colors = ["White", "orange"]
+    amylpred_colors = ["White", "green"]
     fig = go.Figure(data=go.Heatmap(
-        z=combined_matrix,
+        z=colormap_matrix,
         zmin=0,
-        zmax=10,
+        zmax=5,
         colorscale=[ # TODO: using colormap more directly might make this easier
-            [0, 'white'],       # No LCR, (zipperDB)
-            [0.1, 'darkgray'],  # LCR (no zipperDB)
-            [0.2, 'lightgray'], # None
-            [0.3, 'orange'],      # 
-            [0.4, 'white'],     # 
-            [1, 'green']        # Both
+            [0, lcr_colors[0]],             # White
+            [0.2, lcr_colors[1]],           # Orange
+            [0.4, amylpred_colors[0]],      # White
+            [0.6, amylpred_colors[1]],      # Green
+            [0.8, zipperdb_colors[0]],      # White
+            [1, zipperdb_colors[1]]       # Dark Gray
             
         ],
         showscale=False,
@@ -231,3 +266,23 @@ def create_interactive_heatmaps_v2(lcr_data,
     #make_axes(fig, data_length, xticks)
 
     return fig
+
+def test_create_interactive_heatmaps():
+    # Test data
+    lcr_data = np.random.randint(0, 2, size=(1, 100))
+    zipperdb_data = np.random.uniform(-30, 10, size=(1, 100))
+    amylpred_data = np.random.randint(0, 7, size=(1, 100))
+
+    fig = create_interactive_heatmaps_v2(
+        lcr_data=lcr_data,
+        seg_treshold=25,
+        zipperdb_data=zipperdb_data,
+        amylpred_data=amylpred_data,
+        zipperdb_threshold=-23,
+        name="Test Protein",
+        xticks=10
+    )
+    fig.show()
+
+if __name__ == "__main__":
+    test_create_interactive_heatmaps()  
