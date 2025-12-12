@@ -63,6 +63,14 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
             print("Reinstate warning about Amylpred failure here")
             amylpred_data = None
 
+    aggrescan_tool = dg.AggrescanDataGatheringTool()
+    if DEBUG:
+        aggrescan_data = aggrescan_tool.get_debug_data()
+    else:
+        aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq)
+    # amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))
+
+
     do_matplotlib_plots = False
     if do_matplotlib_plots:
         if SEG==0:
