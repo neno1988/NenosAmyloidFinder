@@ -28,8 +28,7 @@ ILVTRCPRAARFSHLYRGVFPFVFEKEPVSDWTDDVEARINFGIEKAKEFGILKKGDTYV
 SIQGFKAGAGHSNTLQVSTV"""
 
 
-def analyse_protein(output_folder, seq, description, name, threshold, SEG, xticks, 
-                    debug_SEG_data = None, debug_zipperDB_data = None, debug_amylpred_data = None):
+def analyse_protein(output_folder, seq, description, name, threshold, SEG, xticks, DEBUG = False):
     #TODO: this function might belong in the upper sub-package
     fasta_protein = FastaSeq() # TODO: use official fasta struct here
     fasta_protein.description = description
@@ -39,22 +38,25 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     # Get SEG and ZipperDB data
     seg_tool_parameters = dg.SEGDataGatheringToolParameters(seg=SEG)
     seg_tool = dg.SEGDataGatheringTool()
-    if debug_SEG_data is not None:
-        seg_data = debug_SEG_data
+    if DEBUG:
+        seg_data = seg_tool.get_debug_data()
     else:
         seg_data = seg_tool.get_data_from_sequence(fasta_protein, parameters=seg_tool_parameters)
+    zipperDB_parameters = dg.ZDBDataGatheringToolParameters(threshold=threshold)
+    zipperDB_tool = dg.ZDBDataGatheringTool()
 
-    if debug_zipperDB_data is not None:
-        zipperDB_data = debug_zipperDB_data
+    if DEBUG:
+        zipperDB_data = zipperDB_tool.get_debug_data()
     else:
-        zipperDB_data = dg.get_zipperDB_data(fasta_protein)
+        zipperDB_data = zipperDB_tool.get_data_from_sequence(fasta_protein, parameters=zipperDB_parameters)
 
+    amylpred_tool = dg.AmylpredDataGatheringTool()
     # Get Amylpred data if credentials are provided
-    if debug_amylpred_data is not None:
-        amylpred_data = debug_amylpred_data
+    if DEBUG:
+        amylpred_data = amylpred_tool.get_debug_data()
     else:
         try:
-            amylpred_data = dg.get_amylpred_data(fasta_protein.seq)
+            amylpred_data = amylpred_tool.get_data_from_sequence(fasta_protein.seq)
         except Exception as e:
             # TODO: reinstate warning
             # messagebox.showwarning("Warning", f"Failed to get Amylpred data: {str(e)}")
