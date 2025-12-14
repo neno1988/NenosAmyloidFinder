@@ -1,6 +1,30 @@
 import plotly.graph_objects as go
 import numpy as np
 
+class HeatmapElement:
+    data: np.ndarray
+    number_of_rows: int
+    min_value: float
+    max_value: float
+    color_segments: int
+    legend: str
+    colors: list[str]
+
+    def __init__(self, data, number_of_rows, min_value, max_value, colors, legend, color_segments=2):
+        self.data = data
+        self.number_of_rows = number_of_rows
+        self.min_value = min_value
+        self.max_value = max_value
+        self.colors = colors
+        self.legend = legend
+        self.color_segments = color_segments
+    
+    def get_gui_parameters(self):
+        return {
+            "number_of_rows": "integer",
+            "colors": "List[str]",
+            "color_segments": "integer"
+        }
 
 def get_xticks_interval(data_length):
         # Natural xtick interval
@@ -85,8 +109,6 @@ def create_interactive_heatmaps(lcr_data,
     # old way - just replace the 11 lines with 5 (both), 4 (zipperDB only), 3 (amylpred only), 2 (none)
     for i in range(1, 11):
         combined_matrix[i] = np.where(zipperdb_mask & amylpred_mask, 5, np.where(zipperdb_mask, 4, np.where(amylpred_mask, 3, 2)))
-    
-    
     
     fig = go.Figure(data=go.Heatmap(
         z=combined_matrix,
@@ -182,20 +204,28 @@ def dedicated_prepare_colormap_matrix(lcr_data, zipperdb_data, amylpred_data, zi
     # ZipperDB data - bottom, 4 to 5
     from_row = current_row
     to_row = current_row + ZDB_DATA_ROWS
-
     zipperdb_mask = zipperdb_data[0] <= zipperdb_threshold
     colormap_matrix[from_row:to_row] = colormap_offset + np.where(zipperdb_mask, 1,0)
     hover[from_row:to_row] = zipperdb_mask.astype(int)
     return colormap_matrix, hover
 
-def generalized_prepare_colormap_matrix(tools_list, data_length):
-    HEATMAP_HEIGHT = 11
+def generalized_prepare_colormap_matrix(colormap_data: list[HeatmapElement], data_length, heatmap_height):
 
     # initializations
-    colormap_matrix = np.zeros((HEATMAP_HEIGHT, data_length))
-    hover = np.zeros((HEATMAP_HEIGHT, data_length))
+    colormap_matrix = np.zeros((heatmap_height, data_length))
+    hover = np.zeros((heatmap_height, data_length))
     current_row = 0    
     colormap_offset = 0
+
+    for cm in colormap_data:
+        from_row = current_row
+        to_row = current_row + cm.number_of_rows
+        norm_data = normalize_data(cm.data, max=cm.max_value, min=cm.min_value)
+        colormap_matrix[from_row:to_row] = colormap_offset + norm_data # shift colors to leave the first spots to previous
+        hover[from_row:to_row] = cm.data
+        current_row += cm.number_of_rows
+        colormap_offset += cm.color_segments
+    return colormap_matrix, hover
 
 def create_interactive_heatmaps_v2(lcr_data, 
                                 seg_treshold, 
@@ -210,25 +240,39 @@ def create_interactive_heatmaps_v2(lcr_data,
                                 image_width=1800):
     """
     Create interactive heatmaps using Plotly.
-    ... (docstring) ...
+    maps are normalized from 0 to 1 and then mapped to color segments.
+    color segments ate specified for each heatmap elements. 
+    in this funcion, all elements are combined into a single ta matrix, hover matrix, and color scale.
     """
-    colormap_matrix, hover = dedicated_prepare_colormap_matrix(lcr_data, zipperdb_data, amylpred_data, zipperdb_threshold)
-    zipperdb_colors = ["White", "darkgray"]
-    lcr_colors = ["White", "orange"]
-    amylpred_colors = ["White", "green"]
+    # verified, working
+    use_old_way = False
+    
+    if use_old_way:
+        colormap_matrix, hover = dedicated_prepare_colormap_matrix(lcr_data, zipperdb_data, amylpred_data, zipperdb_threshold)
+    else:
+        
+        zipperdb_data[0] = np.where(zipperdb_data[0] <= zipperdb_threshold, 1, 0)
+        heatmaps: list[HeatmapElement] = []
+        heatmaps.append(HeatmapElement(lcr_data[0], number_of_rows=2, min_value=0, max_value=1, colors = ["White", "orange"], legend = "LCR"))
+        heatmaps.append(HeatmapElement(amylpred_data[0], number_of_rows=7, min_value=0, max_value=6, colors = ["White", "green"], legend = "Amylpred"))
+        heatmaps.append(HeatmapElement(zipperdb_data[0], number_of_rows=2, min_value=0, max_value=1, colors = ["White", "darkgray"], legend = "ZipperDB"))
+        colormap_height = sum([heatmap.number_of_rows for heatmap in heatmaps])
+        colormap_matrix, hover = generalized_prepare_colormap_matrix(
+            heatmaps, 
+            data_length=len(lcr_data[0]),
+            heatmap_height=colormap_height)
+   
+    all_colors = [c for heatmap in heatmaps for c in heatmap.colors]
+    number_of_bars = sum([heatmap.color_segments for heatmap in heatmaps])
+
+    # colorscale: generates the color vecctot and correct mapping for the colorbars
+    colorscale = [[i / (len(all_colors) - 1), color] for i, color in enumerate(all_colors)]
+
     fig = go.Figure(data=go.Heatmap(
         z=colormap_matrix,
         zmin=0,
-        zmax=5,
-        colorscale=[ # TODO: using colormap more directly might make this easier
-            [0, lcr_colors[0]],             # White
-            [0.2, lcr_colors[1]],           # Orange
-            [0.4, amylpred_colors[0]],      # White
-            [0.6, amylpred_colors[1]],      # Green
-            [0.8, zipperdb_colors[0]],      # White
-            [1, zipperdb_colors[1]]       # Dark Gray
-            
-        ],
+        zmax=number_of_bars - 1,
+        colorscale=colorscale,
         showscale=False,
         hoverongaps=False,
         name='Combined',
@@ -236,15 +280,8 @@ def create_interactive_heatmaps_v2(lcr_data,
         hovertemplate = "%{text}<extra></extra>"
     ))
 
-    # Legend using plotly legend.
-    legend_items = [
-        #{'label': 'No LCR', 'color': 'white'},
-        {'label': 'LCR', 'color': 'darkgray'},
-        #{'label': 'None', 'color': 'lightgray'},
-        {'label': 'Amylpred', 'color': 'green'},
-        {'label': 'ZipperDB', 'color': 'orange'}
-        #{'label': 'Both', 'color': 'green'}
-    ]
+    # Legend using plotly legend, each line: dict containing {'label': 'XXX', 'color': 'YYY'}
+    legend_items = [{'label': heatmap.legend, 'color': heatmap.colors[-1]} for heatmap in heatmaps if heatmap.legend]
 
     for item in legend_items:
         fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers', marker=dict(color=item['color']), name=item['label']))
@@ -263,7 +300,6 @@ def create_interactive_heatmaps_v2(lcr_data,
         
     )
     make_annotations(fig, name, name_position, seg_treshold, zipperdb_threshold)
-    #make_axes(fig, data_length, xticks)
 
     return fig
 
