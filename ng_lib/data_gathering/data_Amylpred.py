@@ -195,7 +195,8 @@ class AmylpredDataGatheringTool(DataGatheringTool):
 
 def test_single_fasta():
     prepare_environment()
-    res_url = fetch_amylpred_results(CDC19_FASTA_FULL)
+    tool = AmylpredDataGatheringTool()
+    res_url = tool.fetch_amylpred_results(CDC19_FASTA_FULL)
     assert(res_url[0:35]=="http://thalis.biol.uoa.gr/AMYLPRED2")
     print(res_url)
 
