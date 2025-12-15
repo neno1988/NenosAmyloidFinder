@@ -8,7 +8,7 @@ import plotly as plt
 import ng_lib.data_gathering as dg
 from ng_lib.utils import FastaSeq
 from ng_lib.plot import heatmaps_binary_non_binary
-from ng_lib.visualization.plotly_heatmaps import create_interactive_heatmaps_v2 as create_interactive_heatmaps
+from ng_lib.visualization.plotly_heatmaps import create_interactive_heatmaps, make_annotations, HeatmapElement
 import os
 import json
 import re
@@ -39,21 +39,22 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     seg_tool_parameters = dg.SEGDataGatheringToolParameters(seg=SEG)
     seg_tool = dg.SEGDataGatheringTool()
     if DEBUG:
-        seg_data = seg_tool.get_debug_data()
+        seg_data = seg_tool.get_debug_data(len(fasta_protein.seq))
     else:
         seg_data = seg_tool.get_data_from_sequence(fasta_protein, parameters=seg_tool_parameters)
     zipperDB_parameters = dg.ZDBDataGatheringToolParameters(threshold=threshold)
     zipperDB_tool = dg.ZDBDataGatheringTool()
 
     if DEBUG:
-        zipperDB_data = zipperDB_tool.get_debug_data()
+        zipperDB_data = zipperDB_tool.get_debug_data(len(fasta_protein.seq))
     else:
         zipperDB_data = zipperDB_tool.get_data_from_sequence(fasta_protein, parameters=zipperDB_parameters)
 
     amylpred_tool = dg.AmylpredDataGatheringTool()
     # Get Amylpred data if credentials are provided
+    NUMBER_OF_AMYLPRED_TOOLS = 6
     if DEBUG:
-        amylpred_data = amylpred_tool.get_debug_data()
+        amylpred_data = amylpred_tool.get_debug_data(len(fasta_protein.seq))*6
     else:
         try:
             amylpred_data = amylpred_tool.get_data_from_sequence(fasta_protein.seq)
@@ -65,39 +66,31 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
 
     aggrescan_tool = dg.AggrescanDataGatheringTool()
     if DEBUG:
-        aggrescan_data = aggrescan_tool.get_debug_data()
+        aggrescan_data = aggrescan_tool.get_debug_data(len(fasta_protein.seq))
     else:
         aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq)
-    # amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))
-
-
-    do_matplotlib_plots = False
-    if do_matplotlib_plots:
-        if SEG==0:
-            # TODO: only return fig  in nice_heatmap_plot?
-            white_cmap = ["white", "white"]
-            fig = heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, force_cmap=white_cmap, seg_bar_height=0, xticks=xticks)
-        else:
-            fig = heatmaps_binary_non_binary(seg_data, zipperDB_data[0], threshold=threshold, name=name, xticks=xticks)
-            # Save the figure as a JPEG file
-        file_name = fasta_protein.name+'_treshold_'+str(threshold)+'.jpg'
-        fig.savefig(os.path.join(output_folder, file_name), format='jpeg', dpi=300)
-        fig.show() 
-
+    
+    # complete amylopred data with the typically missing aggrescan data
+    amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))
+    NUMBER_OF_AMYLPRED_TOOLS += 1
+    
     # Create interactive plot
     IMAGE_HEIGHT = 200
     IMAGE_WIDTH = 1800
+    heatmaps: list[HeatmapElement] = []
+    heatmaps.append(HeatmapElement(seg_data, number_of_rows=2, min_value=0, max_value=1, colors = ["White", "orange"], legend = "LCR"))
+    heatmaps.append(HeatmapElement(amylpred_data, number_of_rows=7, min_value=0, max_value=NUMBER_OF_AMYLPRED_TOOLS, colors = ["White", "green"], legend = "Amylpred"))
+    heatmaps.append(HeatmapElement(zipperDB_data, number_of_rows=2, min_value=0, max_value=1, colors = ["White", "darkgray"], legend = "ZipperDB"))
+ 
+
     fig = create_interactive_heatmaps(
-        lcr_data=seg_data.reshape(1, -1),
-        seg_treshold = SEG,
-        zipperdb_data=zipperDB_data,
-        amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDB_data),
-        zipperdb_threshold=threshold,
+        heatmaps=heatmaps,
         name=name,
         xticks=xticks,
         image_height=IMAGE_HEIGHT, 
         image_width=IMAGE_WIDTH 
     )
+    make_annotations(fig, name, "left", SEG, threshold)
     #fig.show()
 
     # Save the figure as HTML
@@ -108,14 +101,10 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     html_file = os.path.normpath(html_file)
     png_file = os.path.join(output_folder, f"{name_and_parameters}_image.png")
     json_file = os.path.join(output_folder, f"{name_and_parameters}_data.json")
-    
-    fig.write_html(html_file)
-    
 
+    fig.write_html(html_file)
     fig.data= [fig.data[0]]
     fig.update_layout(title_text=None)
-
-
     fig.write_image(png_file, engine='kaleido', width = IMAGE_WIDTH, height = IMAGE_HEIGHT)
 
 
@@ -128,22 +117,11 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     data_file["Amylpred"] = amylpred_data.tolist()
     data_file["SEG"] = seg_data.tolist()
 
-
     # Save the JSON
     with open(json_file, 'w') as f:
         json.dump(data_file, f, indent = 4)
     
-    # If Amylpred data is available, show it
-    plot_amylpred_only = False
-    if plot_amylpred_only and amylpred_data is not None:
-        plt.figure(figsize=(10, 2))
-        plt.imshow(amylpred_data, cmap='viridis', aspect='auto')
-        plt.colorbar(label='Amylpred Score')
-        plt.yticks([])
-        plt.xticks(ticks=np.arange(len(seq)), fontsize=8)
-        plt.xlabel('Amino Acid Position')
-        plt.title(f'Amylpred Analysis - {name}')
-        plt.show()
+    return fig, output_folder
 
 
 def test_analysis():
@@ -155,18 +133,16 @@ def test_analysis():
     # TODO: separation of concerns could be better here
     sequence = test_data["fasta_seq"]
     output_folder = os.getcwd() + f'\\test_files\\'
-    analyse_protein(output_folder, sequence, test_data["fasta_description"], test_data["fasta_name"], threshold, SEG, xticks, 
-                    debug_SEG_data = np.array(test_data["SEG_data"]), 
-                    debug_zipperDB_data = np.array(test_data["zipperDB_data"]), 
-                    debug_amylpred_data = np.array(test_data["amylpred_data"]))
-
+    fig, output_folder = analyse_protein(output_folder, sequence, test_data["fasta_description"], test_data["fasta_name"], threshold, SEG, xticks, DEBUG = True)
+    fig.show()
 
 # TEST DATA GENERATION FUNCTIONS
 def generate_test_data():
+    import numpy as np
     fasta_cdc19 = get_CDC19_fasta()
-    SEG_data = get_SEG_data(fasta_cdc19, seg=25)
-    zipperDB_data = get_zipperDB_data(fasta_cdc19)
-    amylpred_data = get_amylpred_data(fasta_cdc19.seq)
+    SEG_data = np.random.random(len(fasta_cdc19.seq))
+    zipperDB_data = np.random.random(len(fasta_cdc19.seq))
+    amylpred_data = np.random.random(len(fasta_cdc19.seq))*6
 
     test_data = {
         "fasta_seq": fasta_cdc19.seq,

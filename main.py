@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 import re
-
-
-
+import numpy as np
+from ng_lib.visualization.plotly_heatmaps import HeatmapElement, create_interactive_heatmaps
 
 cdc19Fasta = "MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH\
     KSVIDNARKSEELYPGRPLAIALDTKGPEIRTGTTTNDVDYPIPPNHEMIFTTDDKYAKA\
@@ -25,6 +24,8 @@ cdc19Fasta = "MSRLERLTSLNVVAGSDLRRTSIIGTIGPKTNNPETLVALRKAGLNIVRMNFSHGSYEYH\
 
 test_fasta = ">sp|P32119|PRDX2_HUMAN Peroxiredoxin-2 OS=Homo sapiens OX=9606 GN=PRDX2 PE=1 SV=5MASGNARIGKPAPDFKATAVVDGAFKEVKLSDYKGKYVVLFFYPLDFTFVCPTEIIAFSNRAEDFRKLGCEVLGVSVDSQFTHLAWINTPRKEGGLGPLNIPLLADVTRRLSEDYGVLKTDEGIAYRGLFIIDGKGVLRQITVNDLPVGRSVDEALRLVQAFQYTDEHGEVCPAGWKPGSDTIKPNVDDSKEYFSKHN"
 
+# Configuration file path
+CONFIG_FILE = 'neno_config.json'
 
 def main_debug():
     
@@ -40,41 +41,38 @@ def main_debug():
 
     fasta_sequence = ng.get_protein_fasta_by_string_id("P32119")
     fasta_sequence = Grasp65
-    seg_data = ng.get_SEG_data(fasta_sequence, seg=25)
-    zipperDE_data = ng.get_zipperDB_data(fasta_sequence)
-    amylpred_data = ng.get_amylpred_data(fasta_sequence.seq)
+    seg_data = np.random.random(len(fasta_sequence.seq))
+    zipperDB_data = np.random.random(len(fasta_sequence.seq))
+    amylpred_data = np.random.random(len(fasta_sequence.seq))*6
 
-    #fig1, _ = ng.nice_heatmap_plot(seg_data)
-    #fig1.show()
-        # Create interactive plot
-    debugging_ng = False
-    if debugging_ng:
-        fig = ng.visualization.create_interactive_heatmaps(
-            lcr_data=seg_data.reshape(1, -1),
-            seg_treshold = 25,
-            zipperdb_data=zipperDE_data,
-            amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
-            zipperdb_threshold=-23,
-            name="name",
-            xticks=50
-        )
-        fig.show()
-    else: 
-        # Create interactive plot
-        fig = ng.visualization.plotly_heatmaps.create_interactive_heatmaps(
-            lcr_data=seg_data.reshape(1, -1),
-            seg_treshold = 25,
-            zipperdb_data=zipperDE_data,
-            amylpred_data=amylpred_data if amylpred_data is not None else np.zeros_like(zipperDE_data),
-            zipperdb_threshold=-23,
-            name="name",
-            xticks=0
-        )
+
+    config = ng.utils.load_config(path = CONFIG_FILE)
+    zipperDB_settings = {}
+    zipperDB_settings["number_of_rows"] = 2
+    zipperDB_settings["number_of_rows"] = 2
+
+
+    heatmaps: list[HeatmapElement] = []
+    heatmaps.append(HeatmapElement(seg_data, number_of_rows=2, min_value=0, max_value=1, colors = ["White", "orange"], legend = "LCR"))
+    heatmaps.append(HeatmapElement(amylpred_data, number_of_rows=7, min_value=0, max_value=6, colors = ["White", "green"], legend = "Amylpred"))
+    heatmaps.append(HeatmapElement(zipperDB_data, number_of_rows=2, min_value=0, max_value=1, colors = ["White", "darkgray"], legend = "ZipperDB"))
+ 
+
+    fig = ng.visualization.create_interactive_heatmaps(
+        heatmaps=heatmaps,
+        name="name",
+        xticks=50
+    )
+    
+    ng.visualization.make_annotations(fig, fasta_sequence.name, "left", 25, -23)
+    fig.show()
+
+
 
 
 if __name__ == "__main__":
-    # Configuration file path
-    CONFIG_FILE = 'neno_config.json'
+    
+    
     config = ng.utils.load_config(path = CONFIG_FILE)
     # Run the application (GUI)
     root = ng.create_gui(config)

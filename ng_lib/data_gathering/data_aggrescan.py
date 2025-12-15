@@ -24,12 +24,14 @@ SIQGFKAGAGHSNTLQVSTV"""
 
 
 
+class AggrescanDataGatheringToolParameters(DataGatheringTool):
+    threshold: float = 1e-6
 
 class AggrescanDataGatheringTool(DataGatheringTool):
-    def get_data_from_sequence(self, sequence) -> np.ndarray:
+    def get_data_from_sequence(self, sequence, parameters: AggrescanDataGatheringToolParameters) -> np.ndarray:
         response = self.run_aap(sequence)
         print(response)
-        return 
+        return response>parameters.threshold
 
 
     def run_aap(self, sequence: str):
