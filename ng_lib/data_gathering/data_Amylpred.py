@@ -201,16 +201,18 @@ def test_single_fasta():
 
 
 def test_multi_fasta():
+    tool = AmylpredDataGatheringTool()
     prepare_environment()
-    fetch_amylpred_results(CDC19_FASTA_FULL + "\n\n" + CDC19_FASTA_FULL)
+    tool.fetch_amylpred_results(CDC19_FASTA_FULL + "\n\n" + CDC19_FASTA_FULL)
 
 
 def test_consensus_vec():
+    tool = AmylpredDataGatheringTool()
     test_result_file_path = os.getcwd() + CDC19_AMYLPRED2_RESULT_FILE
     with open(test_result_file_path, 'r') as file:
         lines = file.readlines()
-    consensus_dict = parse_results_file(test_result_file_path)
-    consensus_vec = get_consensus_vec(consensus_dict, len(CDC19_FASTA_FULL))
+    consensus_dict = tool.parse_results_file(test_result_file_path)
+    consensus_vec = tool.get_consensus_vec(consensus_dict, len(CDC19_FASTA_FULL))
     print(consensus_vec)
 
 
