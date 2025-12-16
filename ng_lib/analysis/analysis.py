@@ -65,10 +65,11 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
             amylpred_data = None
 
     aggrescan_tool = dg.AggrescanDataGatheringTool()
+    aggrescan_parameters = dg.AggrescanDataGatheringToolParameters()
     if DEBUG:
         aggrescan_data = aggrescan_tool.get_debug_data(len(fasta_protein.seq))
     else:
-        aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq)
+        aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq, aggrescan_parameters)
     
     # complete amylopred data with the typically missing aggrescan data
     amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))

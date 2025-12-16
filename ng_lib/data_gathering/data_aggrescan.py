@@ -29,9 +29,10 @@ class AggrescanDataGatheringToolParameters(DataGatheringTool):
 
 class AggrescanDataGatheringTool(DataGatheringTool):
     def get_data_from_sequence(self, sequence, parameters: AggrescanDataGatheringToolParameters) -> np.ndarray:
-        response = self.run_aap(sequence)
+        response = self.run_aap(">example\r\n" + sequence)
         print(response)
-        return response>parameters.threshold
+        result = self.parse_aggrescan_html(response)
+        return np.where(np.asarray(result)>parameters.threshold,1,0)
 
 
     def run_aap(self, sequence: str):
