@@ -31,8 +31,10 @@ class ZDBDataGatheringToolParameters:
 class ZDBDataGatheringTool(DataGatheringTool):
     def get_data_from_sequence(self, sequence, parameters: ZDBDataGatheringToolParameters) -> np.ndarray:
         zdb_data = self.get_zipperDB_data(sequence)
-
-        return zdb_data <= parameters.threshold
+        if parameters.threshold is None:
+            return zdb_data
+        else:
+            return zdb_data <= parameters.threshold
 
 
     def fetch_single_zipperdb_result(self, fasta_sequence):
