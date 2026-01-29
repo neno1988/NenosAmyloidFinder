@@ -69,11 +69,17 @@ def analyse_protein(output_folder, seq, description, name, threshold, SEG, xtick
     if DEBUG:
         aggrescan_data = aggrescan_tool.get_debug_data(len(fasta_protein.seq))
     else:
-        aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq, aggrescan_parameters)
+        try:
+            aggrescan_data = aggrescan_tool.get_data_from_sequence(fasta_protein.seq, aggrescan_parameters)
+        except Exception as e:
+            print("Aggrescan failure here - Server not available")
+            aggrescan_data = None
+    
     
     # complete amylopred data with the typically missing aggrescan data
-    amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))
-    NUMBER_OF_AMYLPRED_TOOLS += 1
+    if aggrescan_data is not None:
+        amylpred_data = aggrescan_data + (amylpred_data if amylpred_data is not None else np.zeros_like(aggrescan_data))
+        NUMBER_OF_AMYLPRED_TOOLS += 1
     
     # Create interactive plot
     IMAGE_HEIGHT = 200
